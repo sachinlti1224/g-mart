@@ -1654,14 +1654,14 @@ function catchError(selector) {
 function scanInternals(accumulator, seed, hasSeed, emitOnNext, emitBeforeComplete) {
   return (source, subscriber) => {
     let hasState = hasSeed;
-    let state2 = seed;
+    let state = seed;
     let index = 0;
     source.subscribe(createOperatorSubscriber(subscriber, (value) => {
       const i = index++;
-      state2 = hasState ? accumulator(state2, value, i) : (hasState = true, value);
-      emitOnNext && subscriber.next(state2);
+      state = hasState ? accumulator(state, value, i) : (hasState = true, value);
+      emitOnNext && subscriber.next(state);
     }, emitBeforeComplete && (() => {
-      hasState && subscriber.next(state2);
+      hasState && subscriber.next(state);
       subscriber.complete();
     })));
   };
@@ -4846,8 +4846,8 @@ function resolveComponentResources(resourceResolver) {
       const styleUrls = component.styleUrls;
       component.styleUrls.forEach((styleUrl, index) => {
         styles.push("");
-        promises.push(cachedResourceResolve(styleUrl).then((style2) => {
-          styles[styleOffset + index] = style2;
+        promises.push(cachedResourceResolve(styleUrl).then((style) => {
+          styles[styleOffset + index] = style;
           styleUrls.splice(styleUrls.indexOf(styleUrl), 1);
           if (styleUrls.length == 0) {
             component.styleUrls = void 0;
@@ -4855,8 +4855,8 @@ function resolveComponentResources(resourceResolver) {
         }));
       });
     } else if (component.styleUrl) {
-      promises.push(cachedResourceResolve(component.styleUrl).then((style2) => {
-        styles.push(style2);
+      promises.push(cachedResourceResolve(component.styleUrl).then((style) => {
+        styles.push(style);
         component.styleUrl = void 0;
       }));
     }
@@ -10648,9 +10648,9 @@ function computeStaticStyling(tNode, attrs, writeToHost) {
       } else if (mode == 1) {
         classes = concatStringsWithSpace(classes, value);
       } else if (mode == 2) {
-        const style2 = value;
+        const style = value;
         const styleValue = attrs[++i];
-        styles = concatStringsWithSpace(styles, style2 + ": " + styleValue + ";");
+        styles = concatStringsWithSpace(styles, style + ": " + styleValue + ";");
       }
     }
   }
@@ -12930,14 +12930,14 @@ var DeferEventEntry = class {
     };
   }
 };
-function onInteraction(trigger2, callback) {
-  let entry = interactionTriggers.get(trigger2);
+function onInteraction(trigger, callback) {
+  let entry = interactionTriggers.get(trigger);
   if (!entry) {
     entry = new DeferEventEntry();
-    interactionTriggers.set(trigger2, entry);
+    interactionTriggers.set(trigger, entry);
     ngDevMode && NgZone.assertInAngularZone();
     for (const name of interactionEventNames) {
-      trigger2.addEventListener(name, entry.listener, eventListenerOptions);
+      trigger.addEventListener(name, entry.listener, eventListenerOptions);
     }
   }
   entry.callbacks.add(callback);
@@ -12945,21 +12945,21 @@ function onInteraction(trigger2, callback) {
     const { callbacks, listener } = entry;
     callbacks.delete(callback);
     if (callbacks.size === 0) {
-      interactionTriggers.delete(trigger2);
+      interactionTriggers.delete(trigger);
       for (const name of interactionEventNames) {
-        trigger2.removeEventListener(name, listener, eventListenerOptions);
+        trigger.removeEventListener(name, listener, eventListenerOptions);
       }
     }
   };
 }
-function onHover(trigger2, callback) {
-  let entry = hoverTriggers.get(trigger2);
+function onHover(trigger, callback) {
+  let entry = hoverTriggers.get(trigger);
   if (!entry) {
     entry = new DeferEventEntry();
-    hoverTriggers.set(trigger2, entry);
+    hoverTriggers.set(trigger, entry);
     ngDevMode && NgZone.assertInAngularZone();
     for (const name of hoverEventNames) {
-      trigger2.addEventListener(name, entry.listener, eventListenerOptions);
+      trigger.addEventListener(name, entry.listener, eventListenerOptions);
     }
   }
   entry.callbacks.add(callback);
@@ -12968,15 +12968,15 @@ function onHover(trigger2, callback) {
     callbacks.delete(callback);
     if (callbacks.size === 0) {
       for (const name of hoverEventNames) {
-        trigger2.removeEventListener(name, listener, eventListenerOptions);
+        trigger.removeEventListener(name, listener, eventListenerOptions);
       }
-      hoverTriggers.delete(trigger2);
+      hoverTriggers.delete(trigger);
     }
   };
 }
-function onViewport(trigger2, callback, injector) {
+function onViewport(trigger, callback, injector) {
   const ngZone = injector.get(NgZone);
-  let entry = viewportTriggers.get(trigger2);
+  let entry = viewportTriggers.get(trigger);
   intersectionObserver = intersectionObserver || ngZone.runOutsideAngular(() => {
     return new IntersectionObserver((entries) => {
       for (const current of entries) {
@@ -12988,19 +12988,19 @@ function onViewport(trigger2, callback, injector) {
   });
   if (!entry) {
     entry = new DeferEventEntry();
-    ngZone.runOutsideAngular(() => intersectionObserver.observe(trigger2));
-    viewportTriggers.set(trigger2, entry);
+    ngZone.runOutsideAngular(() => intersectionObserver.observe(trigger));
+    viewportTriggers.set(trigger, entry);
     observedViewportElements++;
   }
   entry.callbacks.add(callback);
   return () => {
-    if (!viewportTriggers.has(trigger2)) {
+    if (!viewportTriggers.has(trigger)) {
       return;
     }
     entry.callbacks.delete(callback);
     if (entry.callbacks.size === 0) {
-      intersectionObserver?.unobserve(trigger2);
-      viewportTriggers.delete(trigger2);
+      intersectionObserver?.unobserve(trigger);
+      viewportTriggers.delete(trigger);
       observedViewportElements--;
     }
     if (observedViewportElements === 0) {
@@ -19654,11 +19654,11 @@ var _BrowserPlatformLocation = class _BrowserPlatformLocation extends PlatformLo
   set pathname(newPath) {
     this._location.pathname = newPath;
   }
-  pushState(state2, title, url) {
-    this._history.pushState(state2, title, url);
+  pushState(state, title, url) {
+    this._history.pushState(state, title, url);
   }
-  replaceState(state2, title, url) {
-    this._history.replaceState(state2, title, url);
+  replaceState(state, title, url) {
+    this._history.replaceState(state, title, url);
   }
   forward() {
     this._history.forward();
@@ -19773,13 +19773,13 @@ var _PathLocationStrategy = class _PathLocationStrategy extends LocationStrategy
     const hash = this._platformLocation.hash;
     return hash && includeHash ? `${pathname}${hash}` : pathname;
   }
-  pushState(state2, title, url, queryParams) {
+  pushState(state, title, url, queryParams) {
     const externalUrl = this.prepareExternalUrl(url + normalizeQueryParams(queryParams));
-    this._platformLocation.pushState(state2, title, externalUrl);
+    this._platformLocation.pushState(state, title, externalUrl);
   }
-  replaceState(state2, title, url, queryParams) {
+  replaceState(state, title, url, queryParams) {
     const externalUrl = this.prepareExternalUrl(url + normalizeQueryParams(queryParams));
-    this._platformLocation.replaceState(state2, title, externalUrl);
+    this._platformLocation.replaceState(state, title, externalUrl);
   }
   forward() {
     this._platformLocation.forward();
@@ -19853,19 +19853,19 @@ var _HashLocationStrategy = class _HashLocationStrategy extends LocationStrategy
     const url = joinWithSlash(this._baseHref, internal);
     return url.length > 0 ? "#" + url : url;
   }
-  pushState(state2, title, path, queryParams) {
+  pushState(state, title, path, queryParams) {
     let url = this.prepareExternalUrl(path + normalizeQueryParams(queryParams));
     if (url.length == 0) {
       url = this._platformLocation.pathname;
     }
-    this._platformLocation.pushState(state2, title, url);
+    this._platformLocation.pushState(state, title, url);
   }
-  replaceState(state2, title, path, queryParams) {
+  replaceState(state, title, path, queryParams) {
     let url = this.prepareExternalUrl(path + normalizeQueryParams(queryParams));
     if (url.length == 0) {
       url = this._platformLocation.pathname;
     }
-    this._platformLocation.replaceState(state2, title, url);
+    this._platformLocation.replaceState(state, title, url);
   }
   forward() {
     this._platformLocation.forward();
@@ -19992,9 +19992,9 @@ var _Location = class _Location {
    * @param state Location history state.
    *
    */
-  go(path, query = "", state2 = null) {
-    this._locationStrategy.pushState(state2, "", path, query);
-    this._notifyUrlChangeListeners(this.prepareExternalUrl(path + normalizeQueryParams(query)), state2);
+  go(path, query = "", state = null) {
+    this._locationStrategy.pushState(state, "", path, query);
+    this._notifyUrlChangeListeners(this.prepareExternalUrl(path + normalizeQueryParams(query)), state);
   }
   /**
    * Changes the browser's URL to a normalized version of the given URL, and replaces
@@ -20004,9 +20004,9 @@ var _Location = class _Location {
    * @param query Query parameters.
    * @param state Location history state.
    */
-  replaceState(path, query = "", state2 = null) {
-    this._locationStrategy.replaceState(state2, "", path, query);
-    this._notifyUrlChangeListeners(this.prepareExternalUrl(path + normalizeQueryParams(query)), state2);
+  replaceState(path, query = "", state = null) {
+    this._locationStrategy.replaceState(state, "", path, query);
+    this._notifyUrlChangeListeners(this.prepareExternalUrl(path + normalizeQueryParams(query)), state);
   }
   /**
    * Navigates forward in the platform's history.
@@ -20059,8 +20059,8 @@ var _Location = class _Location {
     };
   }
   /** @internal */
-  _notifyUrlChangeListeners(url = "", state2) {
-    this._urlChangeListeners.forEach((fn) => fn(url, state2));
+  _notifyUrlChangeListeners(url = "", state) {
+    this._urlChangeListeners.forEach((fn) => fn(url, state));
   }
   /**
    * Subscribes to the platform's `popState` events.
@@ -21452,13 +21452,13 @@ var _NgClass = class _NgClass {
     this._applyStateDiff();
   }
   _updateState(klass, nextEnabled) {
-    const state2 = this.stateMap.get(klass);
-    if (state2 !== void 0) {
-      if (state2.enabled !== nextEnabled) {
-        state2.changed = true;
-        state2.enabled = nextEnabled;
+    const state = this.stateMap.get(klass);
+    if (state !== void 0) {
+      if (state.enabled !== nextEnabled) {
+        state.changed = true;
+        state.enabled = nextEnabled;
       }
-      state2.touched = true;
+      state.touched = true;
     } else {
       this.stateMap.set(klass, {
         enabled: nextEnabled,
@@ -21470,17 +21470,17 @@ var _NgClass = class _NgClass {
   _applyStateDiff() {
     for (const stateEntry of this.stateMap) {
       const klass = stateEntry[0];
-      const state2 = stateEntry[1];
-      if (state2.changed) {
-        this._toggleClass(klass, state2.enabled);
-        state2.changed = false;
-      } else if (!state2.touched) {
-        if (state2.enabled) {
+      const state = stateEntry[1];
+      if (state.changed) {
+        this._toggleClass(klass, state.enabled);
+        state.changed = false;
+      } else if (!state.touched) {
+        if (state.enabled) {
           this._toggleClass(klass, false);
         }
         this.stateMap.delete(klass);
       }
-      state2.touched = false;
+      state.touched = false;
     }
   }
   _toggleClass(klass, enabled) {
@@ -24160,6 +24160,1938 @@ function unwrapSafeUrl(value) {
   return unwrapSafeValue(value);
 }
 
+// node_modules/@angular/common/fesm2022/http.mjs
+var HttpHandler = class {
+};
+var HttpBackend = class {
+};
+var HttpHeaders = class _HttpHeaders {
+  /**  Constructs a new HTTP header object with the given values.*/
+  constructor(headers) {
+    this.normalizedNames = /* @__PURE__ */ new Map();
+    this.lazyUpdate = null;
+    if (!headers) {
+      this.headers = /* @__PURE__ */ new Map();
+    } else if (typeof headers === "string") {
+      this.lazyInit = () => {
+        this.headers = /* @__PURE__ */ new Map();
+        headers.split("\n").forEach((line) => {
+          const index = line.indexOf(":");
+          if (index > 0) {
+            const name = line.slice(0, index);
+            const key = name.toLowerCase();
+            const value = line.slice(index + 1).trim();
+            this.maybeSetNormalizedName(name, key);
+            if (this.headers.has(key)) {
+              this.headers.get(key).push(value);
+            } else {
+              this.headers.set(key, [value]);
+            }
+          }
+        });
+      };
+    } else if (typeof Headers !== "undefined" && headers instanceof Headers) {
+      this.headers = /* @__PURE__ */ new Map();
+      headers.forEach((values, name) => {
+        this.setHeaderEntries(name, values);
+      });
+    } else {
+      this.lazyInit = () => {
+        if (typeof ngDevMode === "undefined" || ngDevMode) {
+          assertValidHeaders(headers);
+        }
+        this.headers = /* @__PURE__ */ new Map();
+        Object.entries(headers).forEach(([name, values]) => {
+          this.setHeaderEntries(name, values);
+        });
+      };
+    }
+  }
+  /**
+   * Checks for existence of a given header.
+   *
+   * @param name The header name to check for existence.
+   *
+   * @returns True if the header exists, false otherwise.
+   */
+  has(name) {
+    this.init();
+    return this.headers.has(name.toLowerCase());
+  }
+  /**
+   * Retrieves the first value of a given header.
+   *
+   * @param name The header name.
+   *
+   * @returns The value string if the header exists, null otherwise
+   */
+  get(name) {
+    this.init();
+    const values = this.headers.get(name.toLowerCase());
+    return values && values.length > 0 ? values[0] : null;
+  }
+  /**
+   * Retrieves the names of the headers.
+   *
+   * @returns A list of header names.
+   */
+  keys() {
+    this.init();
+    return Array.from(this.normalizedNames.values());
+  }
+  /**
+   * Retrieves a list of values for a given header.
+   *
+   * @param name The header name from which to retrieve values.
+   *
+   * @returns A string of values if the header exists, null otherwise.
+   */
+  getAll(name) {
+    this.init();
+    return this.headers.get(name.toLowerCase()) || null;
+  }
+  /**
+   * Appends a new value to the existing set of values for a header
+   * and returns them in a clone of the original instance.
+   *
+   * @param name The header name for which to append the values.
+   * @param value The value to append.
+   *
+   * @returns A clone of the HTTP headers object with the value appended to the given header.
+   */
+  append(name, value) {
+    return this.clone({
+      name,
+      value,
+      op: "a"
+    });
+  }
+  /**
+   * Sets or modifies a value for a given header in a clone of the original instance.
+   * If the header already exists, its value is replaced with the given value
+   * in the returned object.
+   *
+   * @param name The header name.
+   * @param value The value or values to set or override for the given header.
+   *
+   * @returns A clone of the HTTP headers object with the newly set header value.
+   */
+  set(name, value) {
+    return this.clone({
+      name,
+      value,
+      op: "s"
+    });
+  }
+  /**
+   * Deletes values for a given header in a clone of the original instance.
+   *
+   * @param name The header name.
+   * @param value The value or values to delete for the given header.
+   *
+   * @returns A clone of the HTTP headers object with the given value deleted.
+   */
+  delete(name, value) {
+    return this.clone({
+      name,
+      value,
+      op: "d"
+    });
+  }
+  maybeSetNormalizedName(name, lcName) {
+    if (!this.normalizedNames.has(lcName)) {
+      this.normalizedNames.set(lcName, name);
+    }
+  }
+  init() {
+    if (!!this.lazyInit) {
+      if (this.lazyInit instanceof _HttpHeaders) {
+        this.copyFrom(this.lazyInit);
+      } else {
+        this.lazyInit();
+      }
+      this.lazyInit = null;
+      if (!!this.lazyUpdate) {
+        this.lazyUpdate.forEach((update) => this.applyUpdate(update));
+        this.lazyUpdate = null;
+      }
+    }
+  }
+  copyFrom(other) {
+    other.init();
+    Array.from(other.headers.keys()).forEach((key) => {
+      this.headers.set(key, other.headers.get(key));
+      this.normalizedNames.set(key, other.normalizedNames.get(key));
+    });
+  }
+  clone(update) {
+    const clone = new _HttpHeaders();
+    clone.lazyInit = !!this.lazyInit && this.lazyInit instanceof _HttpHeaders ? this.lazyInit : this;
+    clone.lazyUpdate = (this.lazyUpdate || []).concat([update]);
+    return clone;
+  }
+  applyUpdate(update) {
+    const key = update.name.toLowerCase();
+    switch (update.op) {
+      case "a":
+      case "s":
+        let value = update.value;
+        if (typeof value === "string") {
+          value = [value];
+        }
+        if (value.length === 0) {
+          return;
+        }
+        this.maybeSetNormalizedName(update.name, key);
+        const base = (update.op === "a" ? this.headers.get(key) : void 0) || [];
+        base.push(...value);
+        this.headers.set(key, base);
+        break;
+      case "d":
+        const toDelete = update.value;
+        if (!toDelete) {
+          this.headers.delete(key);
+          this.normalizedNames.delete(key);
+        } else {
+          let existing = this.headers.get(key);
+          if (!existing) {
+            return;
+          }
+          existing = existing.filter((value2) => toDelete.indexOf(value2) === -1);
+          if (existing.length === 0) {
+            this.headers.delete(key);
+            this.normalizedNames.delete(key);
+          } else {
+            this.headers.set(key, existing);
+          }
+        }
+        break;
+    }
+  }
+  setHeaderEntries(name, values) {
+    const headerValues = (Array.isArray(values) ? values : [values]).map((value) => value.toString());
+    const key = name.toLowerCase();
+    this.headers.set(key, headerValues);
+    this.maybeSetNormalizedName(name, key);
+  }
+  /**
+   * @internal
+   */
+  forEach(fn) {
+    this.init();
+    Array.from(this.normalizedNames.keys()).forEach((key) => fn(this.normalizedNames.get(key), this.headers.get(key)));
+  }
+};
+function assertValidHeaders(headers) {
+  for (const [key, value] of Object.entries(headers)) {
+    if (!(typeof value === "string" || typeof value === "number") && !Array.isArray(value)) {
+      throw new Error(`Unexpected value of the \`${key}\` header provided. Expecting either a string, a number or an array, but got: \`${value}\`.`);
+    }
+  }
+}
+var HttpUrlEncodingCodec = class {
+  /**
+   * Encodes a key name for a URL parameter or query-string.
+   * @param key The key name.
+   * @returns The encoded key name.
+   */
+  encodeKey(key) {
+    return standardEncoding(key);
+  }
+  /**
+   * Encodes the value of a URL parameter or query-string.
+   * @param value The value.
+   * @returns The encoded value.
+   */
+  encodeValue(value) {
+    return standardEncoding(value);
+  }
+  /**
+   * Decodes an encoded URL parameter or query-string key.
+   * @param key The encoded key name.
+   * @returns The decoded key name.
+   */
+  decodeKey(key) {
+    return decodeURIComponent(key);
+  }
+  /**
+   * Decodes an encoded URL parameter or query-string value.
+   * @param value The encoded value.
+   * @returns The decoded value.
+   */
+  decodeValue(value) {
+    return decodeURIComponent(value);
+  }
+};
+function paramParser(rawParams, codec) {
+  const map2 = /* @__PURE__ */ new Map();
+  if (rawParams.length > 0) {
+    const params = rawParams.replace(/^\?/, "").split("&");
+    params.forEach((param) => {
+      const eqIdx = param.indexOf("=");
+      const [key, val] = eqIdx == -1 ? [codec.decodeKey(param), ""] : [codec.decodeKey(param.slice(0, eqIdx)), codec.decodeValue(param.slice(eqIdx + 1))];
+      const list = map2.get(key) || [];
+      list.push(val);
+      map2.set(key, list);
+    });
+  }
+  return map2;
+}
+var STANDARD_ENCODING_REGEX = /%(\d[a-f0-9])/gi;
+var STANDARD_ENCODING_REPLACEMENTS = {
+  "40": "@",
+  "3A": ":",
+  "24": "$",
+  "2C": ",",
+  "3B": ";",
+  "3D": "=",
+  "3F": "?",
+  "2F": "/"
+};
+function standardEncoding(v) {
+  return encodeURIComponent(v).replace(STANDARD_ENCODING_REGEX, (s, t) => STANDARD_ENCODING_REPLACEMENTS[t] ?? s);
+}
+function valueToString(value) {
+  return `${value}`;
+}
+var HttpParams = class _HttpParams {
+  constructor(options = {}) {
+    this.updates = null;
+    this.cloneFrom = null;
+    this.encoder = options.encoder || new HttpUrlEncodingCodec();
+    if (!!options.fromString) {
+      if (!!options.fromObject) {
+        throw new Error(`Cannot specify both fromString and fromObject.`);
+      }
+      this.map = paramParser(options.fromString, this.encoder);
+    } else if (!!options.fromObject) {
+      this.map = /* @__PURE__ */ new Map();
+      Object.keys(options.fromObject).forEach((key) => {
+        const value = options.fromObject[key];
+        const values = Array.isArray(value) ? value.map(valueToString) : [valueToString(value)];
+        this.map.set(key, values);
+      });
+    } else {
+      this.map = null;
+    }
+  }
+  /**
+   * Reports whether the body includes one or more values for a given parameter.
+   * @param param The parameter name.
+   * @returns True if the parameter has one or more values,
+   * false if it has no value or is not present.
+   */
+  has(param) {
+    this.init();
+    return this.map.has(param);
+  }
+  /**
+   * Retrieves the first value for a parameter.
+   * @param param The parameter name.
+   * @returns The first value of the given parameter,
+   * or `null` if the parameter is not present.
+   */
+  get(param) {
+    this.init();
+    const res = this.map.get(param);
+    return !!res ? res[0] : null;
+  }
+  /**
+   * Retrieves all values for a  parameter.
+   * @param param The parameter name.
+   * @returns All values in a string array,
+   * or `null` if the parameter not present.
+   */
+  getAll(param) {
+    this.init();
+    return this.map.get(param) || null;
+  }
+  /**
+   * Retrieves all the parameters for this body.
+   * @returns The parameter names in a string array.
+   */
+  keys() {
+    this.init();
+    return Array.from(this.map.keys());
+  }
+  /**
+   * Appends a new value to existing values for a parameter.
+   * @param param The parameter name.
+   * @param value The new value to add.
+   * @return A new body with the appended value.
+   */
+  append(param, value) {
+    return this.clone({
+      param,
+      value,
+      op: "a"
+    });
+  }
+  /**
+   * Constructs a new body with appended values for the given parameter name.
+   * @param params parameters and values
+   * @return A new body with the new value.
+   */
+  appendAll(params) {
+    const updates = [];
+    Object.keys(params).forEach((param) => {
+      const value = params[param];
+      if (Array.isArray(value)) {
+        value.forEach((_value) => {
+          updates.push({
+            param,
+            value: _value,
+            op: "a"
+          });
+        });
+      } else {
+        updates.push({
+          param,
+          value,
+          op: "a"
+        });
+      }
+    });
+    return this.clone(updates);
+  }
+  /**
+   * Replaces the value for a parameter.
+   * @param param The parameter name.
+   * @param value The new value.
+   * @return A new body with the new value.
+   */
+  set(param, value) {
+    return this.clone({
+      param,
+      value,
+      op: "s"
+    });
+  }
+  /**
+   * Removes a given value or all values from a parameter.
+   * @param param The parameter name.
+   * @param value The value to remove, if provided.
+   * @return A new body with the given value removed, or with all values
+   * removed if no value is specified.
+   */
+  delete(param, value) {
+    return this.clone({
+      param,
+      value,
+      op: "d"
+    });
+  }
+  /**
+   * Serializes the body to an encoded string, where key-value pairs (separated by `=`) are
+   * separated by `&`s.
+   */
+  toString() {
+    this.init();
+    return this.keys().map((key) => {
+      const eKey = this.encoder.encodeKey(key);
+      return this.map.get(key).map((value) => eKey + "=" + this.encoder.encodeValue(value)).join("&");
+    }).filter((param) => param !== "").join("&");
+  }
+  clone(update) {
+    const clone = new _HttpParams({
+      encoder: this.encoder
+    });
+    clone.cloneFrom = this.cloneFrom || this;
+    clone.updates = (this.updates || []).concat(update);
+    return clone;
+  }
+  init() {
+    if (this.map === null) {
+      this.map = /* @__PURE__ */ new Map();
+    }
+    if (this.cloneFrom !== null) {
+      this.cloneFrom.init();
+      this.cloneFrom.keys().forEach((key) => this.map.set(key, this.cloneFrom.map.get(key)));
+      this.updates.forEach((update) => {
+        switch (update.op) {
+          case "a":
+          case "s":
+            const base = (update.op === "a" ? this.map.get(update.param) : void 0) || [];
+            base.push(valueToString(update.value));
+            this.map.set(update.param, base);
+            break;
+          case "d":
+            if (update.value !== void 0) {
+              let base2 = this.map.get(update.param) || [];
+              const idx = base2.indexOf(valueToString(update.value));
+              if (idx !== -1) {
+                base2.splice(idx, 1);
+              }
+              if (base2.length > 0) {
+                this.map.set(update.param, base2);
+              } else {
+                this.map.delete(update.param);
+              }
+            } else {
+              this.map.delete(update.param);
+              break;
+            }
+        }
+      });
+      this.cloneFrom = this.updates = null;
+    }
+  }
+};
+var HttpContext = class {
+  constructor() {
+    this.map = /* @__PURE__ */ new Map();
+  }
+  /**
+   * Store a value in the context. If a value is already present it will be overwritten.
+   *
+   * @param token The reference to an instance of `HttpContextToken`.
+   * @param value The value to store.
+   *
+   * @returns A reference to itself for easy chaining.
+   */
+  set(token, value) {
+    this.map.set(token, value);
+    return this;
+  }
+  /**
+   * Retrieve the value associated with the given token.
+   *
+   * @param token The reference to an instance of `HttpContextToken`.
+   *
+   * @returns The stored value or default if one is defined.
+   */
+  get(token) {
+    if (!this.map.has(token)) {
+      this.map.set(token, token.defaultValue());
+    }
+    return this.map.get(token);
+  }
+  /**
+   * Delete the value associated with the given token.
+   *
+   * @param token The reference to an instance of `HttpContextToken`.
+   *
+   * @returns A reference to itself for easy chaining.
+   */
+  delete(token) {
+    this.map.delete(token);
+    return this;
+  }
+  /**
+   * Checks for existence of a given token.
+   *
+   * @param token The reference to an instance of `HttpContextToken`.
+   *
+   * @returns True if the token exists, false otherwise.
+   */
+  has(token) {
+    return this.map.has(token);
+  }
+  /**
+   * @returns a list of tokens currently stored in the context.
+   */
+  keys() {
+    return this.map.keys();
+  }
+};
+function mightHaveBody(method) {
+  switch (method) {
+    case "DELETE":
+    case "GET":
+    case "HEAD":
+    case "OPTIONS":
+    case "JSONP":
+      return false;
+    default:
+      return true;
+  }
+}
+function isArrayBuffer(value) {
+  return typeof ArrayBuffer !== "undefined" && value instanceof ArrayBuffer;
+}
+function isBlob(value) {
+  return typeof Blob !== "undefined" && value instanceof Blob;
+}
+function isFormData(value) {
+  return typeof FormData !== "undefined" && value instanceof FormData;
+}
+function isUrlSearchParams(value) {
+  return typeof URLSearchParams !== "undefined" && value instanceof URLSearchParams;
+}
+var HttpRequest = class _HttpRequest {
+  constructor(method, url, third, fourth) {
+    this.url = url;
+    this.body = null;
+    this.reportProgress = false;
+    this.withCredentials = false;
+    this.responseType = "json";
+    this.method = method.toUpperCase();
+    let options;
+    if (mightHaveBody(this.method) || !!fourth) {
+      this.body = third !== void 0 ? third : null;
+      options = fourth;
+    } else {
+      options = third;
+    }
+    if (options) {
+      this.reportProgress = !!options.reportProgress;
+      this.withCredentials = !!options.withCredentials;
+      if (!!options.responseType) {
+        this.responseType = options.responseType;
+      }
+      if (!!options.headers) {
+        this.headers = options.headers;
+      }
+      if (!!options.context) {
+        this.context = options.context;
+      }
+      if (!!options.params) {
+        this.params = options.params;
+      }
+      this.transferCache = options.transferCache;
+    }
+    if (!this.headers) {
+      this.headers = new HttpHeaders();
+    }
+    if (!this.context) {
+      this.context = new HttpContext();
+    }
+    if (!this.params) {
+      this.params = new HttpParams();
+      this.urlWithParams = url;
+    } else {
+      const params = this.params.toString();
+      if (params.length === 0) {
+        this.urlWithParams = url;
+      } else {
+        const qIdx = url.indexOf("?");
+        const sep = qIdx === -1 ? "?" : qIdx < url.length - 1 ? "&" : "";
+        this.urlWithParams = url + sep + params;
+      }
+    }
+  }
+  /**
+   * Transform the free-form body into a serialized format suitable for
+   * transmission to the server.
+   */
+  serializeBody() {
+    if (this.body === null) {
+      return null;
+    }
+    if (isArrayBuffer(this.body) || isBlob(this.body) || isFormData(this.body) || isUrlSearchParams(this.body) || typeof this.body === "string") {
+      return this.body;
+    }
+    if (this.body instanceof HttpParams) {
+      return this.body.toString();
+    }
+    if (typeof this.body === "object" || typeof this.body === "boolean" || Array.isArray(this.body)) {
+      return JSON.stringify(this.body);
+    }
+    return this.body.toString();
+  }
+  /**
+   * Examine the body and attempt to infer an appropriate MIME type
+   * for it.
+   *
+   * If no such type can be inferred, this method will return `null`.
+   */
+  detectContentTypeHeader() {
+    if (this.body === null) {
+      return null;
+    }
+    if (isFormData(this.body)) {
+      return null;
+    }
+    if (isBlob(this.body)) {
+      return this.body.type || null;
+    }
+    if (isArrayBuffer(this.body)) {
+      return null;
+    }
+    if (typeof this.body === "string") {
+      return "text/plain";
+    }
+    if (this.body instanceof HttpParams) {
+      return "application/x-www-form-urlencoded;charset=UTF-8";
+    }
+    if (typeof this.body === "object" || typeof this.body === "number" || typeof this.body === "boolean") {
+      return "application/json";
+    }
+    return null;
+  }
+  clone(update = {}) {
+    const method = update.method || this.method;
+    const url = update.url || this.url;
+    const responseType = update.responseType || this.responseType;
+    const body = update.body !== void 0 ? update.body : this.body;
+    const withCredentials = update.withCredentials !== void 0 ? update.withCredentials : this.withCredentials;
+    const reportProgress = update.reportProgress !== void 0 ? update.reportProgress : this.reportProgress;
+    let headers = update.headers || this.headers;
+    let params = update.params || this.params;
+    const context2 = update.context ?? this.context;
+    if (update.setHeaders !== void 0) {
+      headers = Object.keys(update.setHeaders).reduce((headers2, name) => headers2.set(name, update.setHeaders[name]), headers);
+    }
+    if (update.setParams) {
+      params = Object.keys(update.setParams).reduce((params2, param) => params2.set(param, update.setParams[param]), params);
+    }
+    return new _HttpRequest(method, url, body, {
+      params,
+      headers,
+      context: context2,
+      reportProgress,
+      responseType,
+      withCredentials
+    });
+  }
+};
+var HttpEventType;
+(function(HttpEventType2) {
+  HttpEventType2[HttpEventType2["Sent"] = 0] = "Sent";
+  HttpEventType2[HttpEventType2["UploadProgress"] = 1] = "UploadProgress";
+  HttpEventType2[HttpEventType2["ResponseHeader"] = 2] = "ResponseHeader";
+  HttpEventType2[HttpEventType2["DownloadProgress"] = 3] = "DownloadProgress";
+  HttpEventType2[HttpEventType2["Response"] = 4] = "Response";
+  HttpEventType2[HttpEventType2["User"] = 5] = "User";
+})(HttpEventType || (HttpEventType = {}));
+var HttpResponseBase = class {
+  /**
+   * Super-constructor for all responses.
+   *
+   * The single parameter accepted is an initialization hash. Any properties
+   * of the response passed there will override the default values.
+   */
+  constructor(init, defaultStatus = 200, defaultStatusText = "OK") {
+    this.headers = init.headers || new HttpHeaders();
+    this.status = init.status !== void 0 ? init.status : defaultStatus;
+    this.statusText = init.statusText || defaultStatusText;
+    this.url = init.url || null;
+    this.ok = this.status >= 200 && this.status < 300;
+  }
+};
+var HttpHeaderResponse = class _HttpHeaderResponse extends HttpResponseBase {
+  /**
+   * Create a new `HttpHeaderResponse` with the given parameters.
+   */
+  constructor(init = {}) {
+    super(init);
+    this.type = HttpEventType.ResponseHeader;
+  }
+  /**
+   * Copy this `HttpHeaderResponse`, overriding its contents with the
+   * given parameter hash.
+   */
+  clone(update = {}) {
+    return new _HttpHeaderResponse({
+      headers: update.headers || this.headers,
+      status: update.status !== void 0 ? update.status : this.status,
+      statusText: update.statusText || this.statusText,
+      url: update.url || this.url || void 0
+    });
+  }
+};
+var HttpResponse = class _HttpResponse extends HttpResponseBase {
+  /**
+   * Construct a new `HttpResponse`.
+   */
+  constructor(init = {}) {
+    super(init);
+    this.type = HttpEventType.Response;
+    this.body = init.body !== void 0 ? init.body : null;
+  }
+  clone(update = {}) {
+    return new _HttpResponse({
+      body: update.body !== void 0 ? update.body : this.body,
+      headers: update.headers || this.headers,
+      status: update.status !== void 0 ? update.status : this.status,
+      statusText: update.statusText || this.statusText,
+      url: update.url || this.url || void 0
+    });
+  }
+};
+var HttpErrorResponse = class extends HttpResponseBase {
+  constructor(init) {
+    super(init, 0, "Unknown Error");
+    this.name = "HttpErrorResponse";
+    this.ok = false;
+    if (this.status >= 200 && this.status < 300) {
+      this.message = `Http failure during parsing for ${init.url || "(unknown url)"}`;
+    } else {
+      this.message = `Http failure response for ${init.url || "(unknown url)"}: ${init.status} ${init.statusText}`;
+    }
+    this.error = init.error || null;
+  }
+};
+function addBody(options, body) {
+  return {
+    body,
+    headers: options.headers,
+    context: options.context,
+    observe: options.observe,
+    params: options.params,
+    reportProgress: options.reportProgress,
+    responseType: options.responseType,
+    withCredentials: options.withCredentials,
+    transferCache: options.transferCache
+  };
+}
+var _HttpClient = class _HttpClient {
+  constructor(handler) {
+    this.handler = handler;
+  }
+  /**
+   * Constructs an observable for a generic HTTP request that, when subscribed,
+   * fires the request through the chain of registered interceptors and on to the
+   * server.
+   *
+   * You can pass an `HttpRequest` directly as the only parameter. In this case,
+   * the call returns an observable of the raw `HttpEvent` stream.
+   *
+   * Alternatively you can pass an HTTP method as the first parameter,
+   * a URL string as the second, and an options hash containing the request body as the third.
+   * See `addBody()`. In this case, the specified `responseType` and `observe` options determine the
+   * type of returned observable.
+   *   * The `responseType` value determines how a successful response body is parsed.
+   *   * If `responseType` is the default `json`, you can pass a type interface for the resulting
+   * object as a type parameter to the call.
+   *
+   * The `observe` value determines the return type, according to what you are interested in
+   * observing.
+   *   * An `observe` value of events returns an observable of the raw `HttpEvent` stream, including
+   * progress events by default.
+   *   * An `observe` value of response returns an observable of `HttpResponse<T>`,
+   * where the `T` parameter depends on the `responseType` and any optionally provided type
+   * parameter.
+   *   * An `observe` value of body returns an observable of `<T>` with the same `T` body type.
+   *
+   */
+  request(first2, url, options = {}) {
+    let req;
+    if (first2 instanceof HttpRequest) {
+      req = first2;
+    } else {
+      let headers = void 0;
+      if (options.headers instanceof HttpHeaders) {
+        headers = options.headers;
+      } else {
+        headers = new HttpHeaders(options.headers);
+      }
+      let params = void 0;
+      if (!!options.params) {
+        if (options.params instanceof HttpParams) {
+          params = options.params;
+        } else {
+          params = new HttpParams({
+            fromObject: options.params
+          });
+        }
+      }
+      req = new HttpRequest(first2, url, options.body !== void 0 ? options.body : null, {
+        headers,
+        context: options.context,
+        params,
+        reportProgress: options.reportProgress,
+        // By default, JSON is assumed to be returned for all calls.
+        responseType: options.responseType || "json",
+        withCredentials: options.withCredentials,
+        transferCache: options.transferCache
+      });
+    }
+    const events$ = of(req).pipe(concatMap((req2) => this.handler.handle(req2)));
+    if (first2 instanceof HttpRequest || options.observe === "events") {
+      return events$;
+    }
+    const res$ = events$.pipe(filter((event) => event instanceof HttpResponse));
+    switch (options.observe || "body") {
+      case "body":
+        switch (req.responseType) {
+          case "arraybuffer":
+            return res$.pipe(map((res) => {
+              if (res.body !== null && !(res.body instanceof ArrayBuffer)) {
+                throw new Error("Response is not an ArrayBuffer.");
+              }
+              return res.body;
+            }));
+          case "blob":
+            return res$.pipe(map((res) => {
+              if (res.body !== null && !(res.body instanceof Blob)) {
+                throw new Error("Response is not a Blob.");
+              }
+              return res.body;
+            }));
+          case "text":
+            return res$.pipe(map((res) => {
+              if (res.body !== null && typeof res.body !== "string") {
+                throw new Error("Response is not a string.");
+              }
+              return res.body;
+            }));
+          case "json":
+          default:
+            return res$.pipe(map((res) => res.body));
+        }
+      case "response":
+        return res$;
+      default:
+        throw new Error(`Unreachable: unhandled observe type ${options.observe}}`);
+    }
+  }
+  /**
+   * Constructs an observable that, when subscribed, causes the configured
+   * `DELETE` request to execute on the server. See the individual overloads for
+   * details on the return type.
+   *
+   * @param url     The endpoint URL.
+   * @param options The HTTP options to send with the request.
+   *
+   */
+  delete(url, options = {}) {
+    return this.request("DELETE", url, options);
+  }
+  /**
+   * Constructs an observable that, when subscribed, causes the configured
+   * `GET` request to execute on the server. See the individual overloads for
+   * details on the return type.
+   */
+  get(url, options = {}) {
+    return this.request("GET", url, options);
+  }
+  /**
+   * Constructs an observable that, when subscribed, causes the configured
+   * `HEAD` request to execute on the server. The `HEAD` method returns
+   * meta information about the resource without transferring the
+   * resource itself. See the individual overloads for
+   * details on the return type.
+   */
+  head(url, options = {}) {
+    return this.request("HEAD", url, options);
+  }
+  /**
+   * Constructs an `Observable` that, when subscribed, causes a request with the special method
+   * `JSONP` to be dispatched via the interceptor pipeline.
+   * The [JSONP pattern](https://en.wikipedia.org/wiki/JSONP) works around limitations of certain
+   * API endpoints that don't support newer,
+   * and preferable [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) protocol.
+   * JSONP treats the endpoint API as a JavaScript file and tricks the browser to process the
+   * requests even if the API endpoint is not located on the same domain (origin) as the client-side
+   * application making the request.
+   * The endpoint API must support JSONP callback for JSONP requests to work.
+   * The resource API returns the JSON response wrapped in a callback function.
+   * You can pass the callback function name as one of the query parameters.
+   * Note that JSONP requests can only be used with `GET` requests.
+   *
+   * @param url The resource URL.
+   * @param callbackParam The callback function name.
+   *
+   */
+  jsonp(url, callbackParam) {
+    return this.request("JSONP", url, {
+      params: new HttpParams().append(callbackParam, "JSONP_CALLBACK"),
+      observe: "body",
+      responseType: "json"
+    });
+  }
+  /**
+   * Constructs an `Observable` that, when subscribed, causes the configured
+   * `OPTIONS` request to execute on the server. This method allows the client
+   * to determine the supported HTTP methods and other capabilities of an endpoint,
+   * without implying a resource action. See the individual overloads for
+   * details on the return type.
+   */
+  options(url, options = {}) {
+    return this.request("OPTIONS", url, options);
+  }
+  /**
+   * Constructs an observable that, when subscribed, causes the configured
+   * `PATCH` request to execute on the server. See the individual overloads for
+   * details on the return type.
+   */
+  patch(url, body, options = {}) {
+    return this.request("PATCH", url, addBody(options, body));
+  }
+  /**
+   * Constructs an observable that, when subscribed, causes the configured
+   * `POST` request to execute on the server. The server responds with the location of
+   * the replaced resource. See the individual overloads for
+   * details on the return type.
+   */
+  post(url, body, options = {}) {
+    return this.request("POST", url, addBody(options, body));
+  }
+  /**
+   * Constructs an observable that, when subscribed, causes the configured
+   * `PUT` request to execute on the server. The `PUT` method replaces an existing resource
+   * with a new set of values.
+   * See the individual overloads for details on the return type.
+   */
+  put(url, body, options = {}) {
+    return this.request("PUT", url, addBody(options, body));
+  }
+};
+_HttpClient.\u0275fac = function HttpClient_Factory(t) {
+  return new (t || _HttpClient)(\u0275\u0275inject(HttpHandler));
+};
+_HttpClient.\u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+  token: _HttpClient,
+  factory: _HttpClient.\u0275fac
+});
+var HttpClient = _HttpClient;
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(HttpClient, [{
+    type: Injectable
+  }], () => [{
+    type: HttpHandler
+  }], null);
+})();
+var XSSI_PREFIX$1 = /^\)\]\}',?\n/;
+var REQUEST_URL_HEADER = `X-Request-URL`;
+function getResponseUrl$1(response) {
+  if (response.url) {
+    return response.url;
+  }
+  const xRequestUrl = REQUEST_URL_HEADER.toLocaleLowerCase();
+  return response.headers.get(xRequestUrl);
+}
+var _FetchBackend = class _FetchBackend {
+  constructor() {
+    this.fetchImpl = inject(FetchFactory, {
+      optional: true
+    })?.fetch ?? fetch.bind(globalThis);
+    this.ngZone = inject(NgZone);
+  }
+  handle(request) {
+    return new Observable((observer) => {
+      const aborter = new AbortController();
+      this.doRequest(request, aborter.signal, observer).then(noop3, (error) => observer.error(new HttpErrorResponse({
+        error
+      })));
+      return () => aborter.abort();
+    });
+  }
+  doRequest(request, signal, observer) {
+    return __async(this, null, function* () {
+      const init = this.createRequestInit(request);
+      let response;
+      try {
+        const fetchPromise = this.fetchImpl(request.urlWithParams, __spreadValues({
+          signal
+        }, init));
+        silenceSuperfluousUnhandledPromiseRejection(fetchPromise);
+        observer.next({
+          type: HttpEventType.Sent
+        });
+        response = yield fetchPromise;
+      } catch (error) {
+        observer.error(new HttpErrorResponse({
+          error,
+          status: error.status ?? 0,
+          statusText: error.statusText,
+          url: request.urlWithParams,
+          headers: error.headers
+        }));
+        return;
+      }
+      const headers = new HttpHeaders(response.headers);
+      const statusText = response.statusText;
+      const url = getResponseUrl$1(response) ?? request.urlWithParams;
+      let status = response.status;
+      let body = null;
+      if (request.reportProgress) {
+        observer.next(new HttpHeaderResponse({
+          headers,
+          status,
+          statusText,
+          url
+        }));
+      }
+      if (response.body) {
+        const contentLength = response.headers.get("content-length");
+        const chunks = [];
+        const reader = response.body.getReader();
+        let receivedLength = 0;
+        let decoder;
+        let partialText;
+        const reqZone = typeof Zone !== "undefined" && Zone.current;
+        yield this.ngZone.runOutsideAngular(() => __async(this, null, function* () {
+          while (true) {
+            const {
+              done,
+              value
+            } = yield reader.read();
+            if (done) {
+              break;
+            }
+            chunks.push(value);
+            receivedLength += value.length;
+            if (request.reportProgress) {
+              partialText = request.responseType === "text" ? (partialText ?? "") + (decoder ??= new TextDecoder()).decode(value, {
+                stream: true
+              }) : void 0;
+              const reportProgress = () => observer.next({
+                type: HttpEventType.DownloadProgress,
+                total: contentLength ? +contentLength : void 0,
+                loaded: receivedLength,
+                partialText
+              });
+              reqZone ? reqZone.run(reportProgress) : reportProgress();
+            }
+          }
+        }));
+        const chunksAll = this.concatChunks(chunks, receivedLength);
+        try {
+          const contentType = response.headers.get("Content-Type") ?? "";
+          body = this.parseBody(request, chunksAll, contentType);
+        } catch (error) {
+          observer.error(new HttpErrorResponse({
+            error,
+            headers: new HttpHeaders(response.headers),
+            status: response.status,
+            statusText: response.statusText,
+            url: getResponseUrl$1(response) ?? request.urlWithParams
+          }));
+          return;
+        }
+      }
+      if (status === 0) {
+        status = body ? 200 : 0;
+      }
+      const ok = status >= 200 && status < 300;
+      if (ok) {
+        observer.next(new HttpResponse({
+          body,
+          headers,
+          status,
+          statusText,
+          url
+        }));
+        observer.complete();
+      } else {
+        observer.error(new HttpErrorResponse({
+          error: body,
+          headers,
+          status,
+          statusText,
+          url
+        }));
+      }
+    });
+  }
+  parseBody(request, binContent, contentType) {
+    switch (request.responseType) {
+      case "json":
+        const text = new TextDecoder().decode(binContent).replace(XSSI_PREFIX$1, "");
+        return text === "" ? null : JSON.parse(text);
+      case "text":
+        return new TextDecoder().decode(binContent);
+      case "blob":
+        return new Blob([binContent], {
+          type: contentType
+        });
+      case "arraybuffer":
+        return binContent.buffer;
+    }
+  }
+  createRequestInit(req) {
+    const headers = {};
+    const credentials = req.withCredentials ? "include" : void 0;
+    req.headers.forEach((name, values) => headers[name] = values.join(","));
+    headers["Accept"] ??= "application/json, text/plain, */*";
+    if (!headers["Content-Type"]) {
+      const detectedType = req.detectContentTypeHeader();
+      if (detectedType !== null) {
+        headers["Content-Type"] = detectedType;
+      }
+    }
+    return {
+      body: req.serializeBody(),
+      method: req.method,
+      headers,
+      credentials
+    };
+  }
+  concatChunks(chunks, totalLength) {
+    const chunksAll = new Uint8Array(totalLength);
+    let position = 0;
+    for (const chunk of chunks) {
+      chunksAll.set(chunk, position);
+      position += chunk.length;
+    }
+    return chunksAll;
+  }
+};
+_FetchBackend.\u0275fac = function FetchBackend_Factory(t) {
+  return new (t || _FetchBackend)();
+};
+_FetchBackend.\u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+  token: _FetchBackend,
+  factory: _FetchBackend.\u0275fac
+});
+var FetchBackend = _FetchBackend;
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(FetchBackend, [{
+    type: Injectable
+  }], null, null);
+})();
+var FetchFactory = class {
+};
+function noop3() {
+}
+function silenceSuperfluousUnhandledPromiseRejection(promise) {
+  promise.then(noop3, noop3);
+}
+function interceptorChainEndFn(req, finalHandlerFn) {
+  return finalHandlerFn(req);
+}
+function adaptLegacyInterceptorToChain(chainTailFn, interceptor) {
+  return (initialRequest, finalHandlerFn) => interceptor.intercept(initialRequest, {
+    handle: (downstreamRequest) => chainTailFn(downstreamRequest, finalHandlerFn)
+  });
+}
+function chainedInterceptorFn(chainTailFn, interceptorFn, injector) {
+  return (initialRequest, finalHandlerFn) => runInInjectionContext(injector, () => interceptorFn(initialRequest, (downstreamRequest) => chainTailFn(downstreamRequest, finalHandlerFn)));
+}
+var HTTP_INTERCEPTORS = new InjectionToken(ngDevMode ? "HTTP_INTERCEPTORS" : "");
+var HTTP_INTERCEPTOR_FNS = new InjectionToken(ngDevMode ? "HTTP_INTERCEPTOR_FNS" : "");
+var HTTP_ROOT_INTERCEPTOR_FNS = new InjectionToken(ngDevMode ? "HTTP_ROOT_INTERCEPTOR_FNS" : "");
+var PRIMARY_HTTP_BACKEND = new InjectionToken(ngDevMode ? "PRIMARY_HTTP_BACKEND" : "");
+function legacyInterceptorFnFactory() {
+  let chain = null;
+  return (req, handler) => {
+    if (chain === null) {
+      const interceptors = inject(HTTP_INTERCEPTORS, {
+        optional: true
+      }) ?? [];
+      chain = interceptors.reduceRight(adaptLegacyInterceptorToChain, interceptorChainEndFn);
+    }
+    const pendingTasks = inject(PendingTasks);
+    const taskId = pendingTasks.add();
+    return chain(req, handler).pipe(finalize(() => pendingTasks.remove(taskId)));
+  };
+}
+var fetchBackendWarningDisplayed = false;
+var _HttpInterceptorHandler = class _HttpInterceptorHandler extends HttpHandler {
+  constructor(backend, injector) {
+    super();
+    this.backend = backend;
+    this.injector = injector;
+    this.chain = null;
+    this.pendingTasks = inject(PendingTasks);
+    const primaryHttpBackend = inject(PRIMARY_HTTP_BACKEND, {
+      optional: true
+    });
+    this.backend = primaryHttpBackend ?? backend;
+    if ((typeof ngDevMode === "undefined" || ngDevMode) && !fetchBackendWarningDisplayed) {
+      const isServer = isPlatformServer(injector.get(PLATFORM_ID));
+      if (isServer && !(this.backend instanceof FetchBackend)) {
+        fetchBackendWarningDisplayed = true;
+        injector.get(Console).warn(formatRuntimeError(2801, "Angular detected that `HttpClient` is not configured to use `fetch` APIs. It's strongly recommended to enable `fetch` for applications that use Server-Side Rendering for better performance and compatibility. To enable `fetch`, add the `withFetch()` to the `provideHttpClient()` call at the root of the application."));
+      }
+    }
+  }
+  handle(initialRequest) {
+    if (this.chain === null) {
+      const dedupedInterceptorFns = Array.from(/* @__PURE__ */ new Set([...this.injector.get(HTTP_INTERCEPTOR_FNS), ...this.injector.get(HTTP_ROOT_INTERCEPTOR_FNS, [])]));
+      this.chain = dedupedInterceptorFns.reduceRight((nextSequencedFn, interceptorFn) => chainedInterceptorFn(nextSequencedFn, interceptorFn, this.injector), interceptorChainEndFn);
+    }
+    const taskId = this.pendingTasks.add();
+    return this.chain(initialRequest, (downstreamRequest) => this.backend.handle(downstreamRequest)).pipe(finalize(() => this.pendingTasks.remove(taskId)));
+  }
+};
+_HttpInterceptorHandler.\u0275fac = function HttpInterceptorHandler_Factory(t) {
+  return new (t || _HttpInterceptorHandler)(\u0275\u0275inject(HttpBackend), \u0275\u0275inject(EnvironmentInjector));
+};
+_HttpInterceptorHandler.\u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+  token: _HttpInterceptorHandler,
+  factory: _HttpInterceptorHandler.\u0275fac
+});
+var HttpInterceptorHandler = _HttpInterceptorHandler;
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(HttpInterceptorHandler, [{
+    type: Injectable
+  }], () => [{
+    type: HttpBackend
+  }, {
+    type: EnvironmentInjector
+  }], null);
+})();
+var nextRequestId = 0;
+var foreignDocument;
+var JSONP_ERR_NO_CALLBACK = "JSONP injected script did not invoke callback.";
+var JSONP_ERR_WRONG_METHOD = "JSONP requests must use JSONP request method.";
+var JSONP_ERR_WRONG_RESPONSE_TYPE = "JSONP requests must use Json response type.";
+var JSONP_ERR_HEADERS_NOT_SUPPORTED = "JSONP requests do not support headers.";
+var JsonpCallbackContext = class {
+};
+function jsonpCallbackContext() {
+  if (typeof window === "object") {
+    return window;
+  }
+  return {};
+}
+var _JsonpClientBackend = class _JsonpClientBackend {
+  constructor(callbackMap, document2) {
+    this.callbackMap = callbackMap;
+    this.document = document2;
+    this.resolvedPromise = Promise.resolve();
+  }
+  /**
+   * Get the name of the next callback method, by incrementing the global `nextRequestId`.
+   */
+  nextCallback() {
+    return `ng_jsonp_callback_${nextRequestId++}`;
+  }
+  /**
+   * Processes a JSONP request and returns an event stream of the results.
+   * @param req The request object.
+   * @returns An observable of the response events.
+   *
+   */
+  handle(req) {
+    if (req.method !== "JSONP") {
+      throw new Error(JSONP_ERR_WRONG_METHOD);
+    } else if (req.responseType !== "json") {
+      throw new Error(JSONP_ERR_WRONG_RESPONSE_TYPE);
+    }
+    if (req.headers.keys().length > 0) {
+      throw new Error(JSONP_ERR_HEADERS_NOT_SUPPORTED);
+    }
+    return new Observable((observer) => {
+      const callback = this.nextCallback();
+      const url = req.urlWithParams.replace(/=JSONP_CALLBACK(&|$)/, `=${callback}$1`);
+      const node = this.document.createElement("script");
+      node.src = url;
+      let body = null;
+      let finished = false;
+      this.callbackMap[callback] = (data) => {
+        delete this.callbackMap[callback];
+        body = data;
+        finished = true;
+      };
+      const cleanup = () => {
+        if (node.parentNode) {
+          node.parentNode.removeChild(node);
+        }
+        delete this.callbackMap[callback];
+      };
+      const onLoad = (event) => {
+        this.resolvedPromise.then(() => {
+          cleanup();
+          if (!finished) {
+            observer.error(new HttpErrorResponse({
+              url,
+              status: 0,
+              statusText: "JSONP Error",
+              error: new Error(JSONP_ERR_NO_CALLBACK)
+            }));
+            return;
+          }
+          observer.next(new HttpResponse({
+            body,
+            status: 200,
+            statusText: "OK",
+            url
+          }));
+          observer.complete();
+        });
+      };
+      const onError = (error) => {
+        cleanup();
+        observer.error(new HttpErrorResponse({
+          error,
+          status: 0,
+          statusText: "JSONP Error",
+          url
+        }));
+      };
+      node.addEventListener("load", onLoad);
+      node.addEventListener("error", onError);
+      this.document.body.appendChild(node);
+      observer.next({
+        type: HttpEventType.Sent
+      });
+      return () => {
+        if (!finished) {
+          this.removeListeners(node);
+        }
+        cleanup();
+      };
+    });
+  }
+  removeListeners(script) {
+    if (!foreignDocument) {
+      foreignDocument = this.document.implementation.createHTMLDocument();
+    }
+    foreignDocument.adoptNode(script);
+  }
+};
+_JsonpClientBackend.\u0275fac = function JsonpClientBackend_Factory(t) {
+  return new (t || _JsonpClientBackend)(\u0275\u0275inject(JsonpCallbackContext), \u0275\u0275inject(DOCUMENT2));
+};
+_JsonpClientBackend.\u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+  token: _JsonpClientBackend,
+  factory: _JsonpClientBackend.\u0275fac
+});
+var JsonpClientBackend = _JsonpClientBackend;
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(JsonpClientBackend, [{
+    type: Injectable
+  }], () => [{
+    type: JsonpCallbackContext
+  }, {
+    type: void 0,
+    decorators: [{
+      type: Inject,
+      args: [DOCUMENT2]
+    }]
+  }], null);
+})();
+function jsonpInterceptorFn(req, next) {
+  if (req.method === "JSONP") {
+    return inject(JsonpClientBackend).handle(req);
+  }
+  return next(req);
+}
+var _JsonpInterceptor = class _JsonpInterceptor {
+  constructor(injector) {
+    this.injector = injector;
+  }
+  /**
+   * Identifies and handles a given JSONP request.
+   * @param initialRequest The outgoing request object to handle.
+   * @param next The next interceptor in the chain, or the backend
+   * if no interceptors remain in the chain.
+   * @returns An observable of the event stream.
+   */
+  intercept(initialRequest, next) {
+    return runInInjectionContext(this.injector, () => jsonpInterceptorFn(initialRequest, (downstreamRequest) => next.handle(downstreamRequest)));
+  }
+};
+_JsonpInterceptor.\u0275fac = function JsonpInterceptor_Factory(t) {
+  return new (t || _JsonpInterceptor)(\u0275\u0275inject(EnvironmentInjector));
+};
+_JsonpInterceptor.\u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+  token: _JsonpInterceptor,
+  factory: _JsonpInterceptor.\u0275fac
+});
+var JsonpInterceptor = _JsonpInterceptor;
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(JsonpInterceptor, [{
+    type: Injectable
+  }], () => [{
+    type: EnvironmentInjector
+  }], null);
+})();
+var XSSI_PREFIX = /^\)\]\}',?\n/;
+function getResponseUrl(xhr) {
+  if ("responseURL" in xhr && xhr.responseURL) {
+    return xhr.responseURL;
+  }
+  if (/^X-Request-URL:/m.test(xhr.getAllResponseHeaders())) {
+    return xhr.getResponseHeader("X-Request-URL");
+  }
+  return null;
+}
+var _HttpXhrBackend = class _HttpXhrBackend {
+  constructor(xhrFactory) {
+    this.xhrFactory = xhrFactory;
+  }
+  /**
+   * Processes a request and returns a stream of response events.
+   * @param req The request object.
+   * @returns An observable of the response events.
+   */
+  handle(req) {
+    if (req.method === "JSONP") {
+      throw new RuntimeError(-2800, (typeof ngDevMode === "undefined" || ngDevMode) && `Cannot make a JSONP request without JSONP support. To fix the problem, either add the \`withJsonpSupport()\` call (if \`provideHttpClient()\` is used) or import the \`HttpClientJsonpModule\` in the root NgModule.`);
+    }
+    const xhrFactory = this.xhrFactory;
+    const source = xhrFactory.\u0275loadImpl ? from(xhrFactory.\u0275loadImpl()) : of(null);
+    return source.pipe(switchMap(() => {
+      return new Observable((observer) => {
+        const xhr = xhrFactory.build();
+        xhr.open(req.method, req.urlWithParams);
+        if (req.withCredentials) {
+          xhr.withCredentials = true;
+        }
+        req.headers.forEach((name, values) => xhr.setRequestHeader(name, values.join(",")));
+        if (!req.headers.has("Accept")) {
+          xhr.setRequestHeader("Accept", "application/json, text/plain, */*");
+        }
+        if (!req.headers.has("Content-Type")) {
+          const detectedType = req.detectContentTypeHeader();
+          if (detectedType !== null) {
+            xhr.setRequestHeader("Content-Type", detectedType);
+          }
+        }
+        if (req.responseType) {
+          const responseType = req.responseType.toLowerCase();
+          xhr.responseType = responseType !== "json" ? responseType : "text";
+        }
+        const reqBody = req.serializeBody();
+        let headerResponse = null;
+        const partialFromXhr = () => {
+          if (headerResponse !== null) {
+            return headerResponse;
+          }
+          const statusText = xhr.statusText || "OK";
+          const headers = new HttpHeaders(xhr.getAllResponseHeaders());
+          const url = getResponseUrl(xhr) || req.url;
+          headerResponse = new HttpHeaderResponse({
+            headers,
+            status: xhr.status,
+            statusText,
+            url
+          });
+          return headerResponse;
+        };
+        const onLoad = () => {
+          let {
+            headers,
+            status,
+            statusText,
+            url
+          } = partialFromXhr();
+          let body = null;
+          if (status !== 204) {
+            body = typeof xhr.response === "undefined" ? xhr.responseText : xhr.response;
+          }
+          if (status === 0) {
+            status = !!body ? 200 : 0;
+          }
+          let ok = status >= 200 && status < 300;
+          if (req.responseType === "json" && typeof body === "string") {
+            const originalBody = body;
+            body = body.replace(XSSI_PREFIX, "");
+            try {
+              body = body !== "" ? JSON.parse(body) : null;
+            } catch (error) {
+              body = originalBody;
+              if (ok) {
+                ok = false;
+                body = {
+                  error,
+                  text: body
+                };
+              }
+            }
+          }
+          if (ok) {
+            observer.next(new HttpResponse({
+              body,
+              headers,
+              status,
+              statusText,
+              url: url || void 0
+            }));
+            observer.complete();
+          } else {
+            observer.error(new HttpErrorResponse({
+              // The error in this case is the response body (error from the server).
+              error: body,
+              headers,
+              status,
+              statusText,
+              url: url || void 0
+            }));
+          }
+        };
+        const onError = (error) => {
+          const {
+            url
+          } = partialFromXhr();
+          const res = new HttpErrorResponse({
+            error,
+            status: xhr.status || 0,
+            statusText: xhr.statusText || "Unknown Error",
+            url: url || void 0
+          });
+          observer.error(res);
+        };
+        let sentHeaders = false;
+        const onDownProgress = (event) => {
+          if (!sentHeaders) {
+            observer.next(partialFromXhr());
+            sentHeaders = true;
+          }
+          let progressEvent = {
+            type: HttpEventType.DownloadProgress,
+            loaded: event.loaded
+          };
+          if (event.lengthComputable) {
+            progressEvent.total = event.total;
+          }
+          if (req.responseType === "text" && !!xhr.responseText) {
+            progressEvent.partialText = xhr.responseText;
+          }
+          observer.next(progressEvent);
+        };
+        const onUpProgress = (event) => {
+          let progress = {
+            type: HttpEventType.UploadProgress,
+            loaded: event.loaded
+          };
+          if (event.lengthComputable) {
+            progress.total = event.total;
+          }
+          observer.next(progress);
+        };
+        xhr.addEventListener("load", onLoad);
+        xhr.addEventListener("error", onError);
+        xhr.addEventListener("timeout", onError);
+        xhr.addEventListener("abort", onError);
+        if (req.reportProgress) {
+          xhr.addEventListener("progress", onDownProgress);
+          if (reqBody !== null && xhr.upload) {
+            xhr.upload.addEventListener("progress", onUpProgress);
+          }
+        }
+        xhr.send(reqBody);
+        observer.next({
+          type: HttpEventType.Sent
+        });
+        return () => {
+          xhr.removeEventListener("error", onError);
+          xhr.removeEventListener("abort", onError);
+          xhr.removeEventListener("load", onLoad);
+          xhr.removeEventListener("timeout", onError);
+          if (req.reportProgress) {
+            xhr.removeEventListener("progress", onDownProgress);
+            if (reqBody !== null && xhr.upload) {
+              xhr.upload.removeEventListener("progress", onUpProgress);
+            }
+          }
+          if (xhr.readyState !== xhr.DONE) {
+            xhr.abort();
+          }
+        };
+      });
+    }));
+  }
+};
+_HttpXhrBackend.\u0275fac = function HttpXhrBackend_Factory(t) {
+  return new (t || _HttpXhrBackend)(\u0275\u0275inject(XhrFactory));
+};
+_HttpXhrBackend.\u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+  token: _HttpXhrBackend,
+  factory: _HttpXhrBackend.\u0275fac
+});
+var HttpXhrBackend = _HttpXhrBackend;
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(HttpXhrBackend, [{
+    type: Injectable
+  }], () => [{
+    type: XhrFactory
+  }], null);
+})();
+var XSRF_ENABLED = new InjectionToken("XSRF_ENABLED");
+var XSRF_DEFAULT_COOKIE_NAME = "XSRF-TOKEN";
+var XSRF_COOKIE_NAME = new InjectionToken("XSRF_COOKIE_NAME", {
+  providedIn: "root",
+  factory: () => XSRF_DEFAULT_COOKIE_NAME
+});
+var XSRF_DEFAULT_HEADER_NAME = "X-XSRF-TOKEN";
+var XSRF_HEADER_NAME = new InjectionToken("XSRF_HEADER_NAME", {
+  providedIn: "root",
+  factory: () => XSRF_DEFAULT_HEADER_NAME
+});
+var HttpXsrfTokenExtractor = class {
+};
+var _HttpXsrfCookieExtractor = class _HttpXsrfCookieExtractor {
+  constructor(doc, platform, cookieName) {
+    this.doc = doc;
+    this.platform = platform;
+    this.cookieName = cookieName;
+    this.lastCookieString = "";
+    this.lastToken = null;
+    this.parseCount = 0;
+  }
+  getToken() {
+    if (this.platform === "server") {
+      return null;
+    }
+    const cookieString = this.doc.cookie || "";
+    if (cookieString !== this.lastCookieString) {
+      this.parseCount++;
+      this.lastToken = parseCookieValue(cookieString, this.cookieName);
+      this.lastCookieString = cookieString;
+    }
+    return this.lastToken;
+  }
+};
+_HttpXsrfCookieExtractor.\u0275fac = function HttpXsrfCookieExtractor_Factory(t) {
+  return new (t || _HttpXsrfCookieExtractor)(\u0275\u0275inject(DOCUMENT2), \u0275\u0275inject(PLATFORM_ID), \u0275\u0275inject(XSRF_COOKIE_NAME));
+};
+_HttpXsrfCookieExtractor.\u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+  token: _HttpXsrfCookieExtractor,
+  factory: _HttpXsrfCookieExtractor.\u0275fac
+});
+var HttpXsrfCookieExtractor = _HttpXsrfCookieExtractor;
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(HttpXsrfCookieExtractor, [{
+    type: Injectable
+  }], () => [{
+    type: void 0,
+    decorators: [{
+      type: Inject,
+      args: [DOCUMENT2]
+    }]
+  }, {
+    type: void 0,
+    decorators: [{
+      type: Inject,
+      args: [PLATFORM_ID]
+    }]
+  }, {
+    type: void 0,
+    decorators: [{
+      type: Inject,
+      args: [XSRF_COOKIE_NAME]
+    }]
+  }], null);
+})();
+function xsrfInterceptorFn(req, next) {
+  const lcUrl = req.url.toLowerCase();
+  if (!inject(XSRF_ENABLED) || req.method === "GET" || req.method === "HEAD" || lcUrl.startsWith("http://") || lcUrl.startsWith("https://")) {
+    return next(req);
+  }
+  const token = inject(HttpXsrfTokenExtractor).getToken();
+  const headerName = inject(XSRF_HEADER_NAME);
+  if (token != null && !req.headers.has(headerName)) {
+    req = req.clone({
+      headers: req.headers.set(headerName, token)
+    });
+  }
+  return next(req);
+}
+var _HttpXsrfInterceptor = class _HttpXsrfInterceptor {
+  constructor(injector) {
+    this.injector = injector;
+  }
+  intercept(initialRequest, next) {
+    return runInInjectionContext(this.injector, () => xsrfInterceptorFn(initialRequest, (downstreamRequest) => next.handle(downstreamRequest)));
+  }
+};
+_HttpXsrfInterceptor.\u0275fac = function HttpXsrfInterceptor_Factory(t) {
+  return new (t || _HttpXsrfInterceptor)(\u0275\u0275inject(EnvironmentInjector));
+};
+_HttpXsrfInterceptor.\u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+  token: _HttpXsrfInterceptor,
+  factory: _HttpXsrfInterceptor.\u0275fac
+});
+var HttpXsrfInterceptor = _HttpXsrfInterceptor;
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(HttpXsrfInterceptor, [{
+    type: Injectable
+  }], () => [{
+    type: EnvironmentInjector
+  }], null);
+})();
+var HttpFeatureKind;
+(function(HttpFeatureKind2) {
+  HttpFeatureKind2[HttpFeatureKind2["Interceptors"] = 0] = "Interceptors";
+  HttpFeatureKind2[HttpFeatureKind2["LegacyInterceptors"] = 1] = "LegacyInterceptors";
+  HttpFeatureKind2[HttpFeatureKind2["CustomXsrfConfiguration"] = 2] = "CustomXsrfConfiguration";
+  HttpFeatureKind2[HttpFeatureKind2["NoXsrfProtection"] = 3] = "NoXsrfProtection";
+  HttpFeatureKind2[HttpFeatureKind2["JsonpSupport"] = 4] = "JsonpSupport";
+  HttpFeatureKind2[HttpFeatureKind2["RequestsMadeViaParent"] = 5] = "RequestsMadeViaParent";
+  HttpFeatureKind2[HttpFeatureKind2["Fetch"] = 6] = "Fetch";
+})(HttpFeatureKind || (HttpFeatureKind = {}));
+function makeHttpFeature(kind, providers) {
+  return {
+    \u0275kind: kind,
+    \u0275providers: providers
+  };
+}
+function provideHttpClient(...features) {
+  if (ngDevMode) {
+    const featureKinds = new Set(features.map((f) => f.\u0275kind));
+    if (featureKinds.has(HttpFeatureKind.NoXsrfProtection) && featureKinds.has(HttpFeatureKind.CustomXsrfConfiguration)) {
+      throw new Error(ngDevMode ? `Configuration error: found both withXsrfConfiguration() and withNoXsrfProtection() in the same call to provideHttpClient(), which is a contradiction.` : "");
+    }
+  }
+  const providers = [HttpClient, HttpXhrBackend, HttpInterceptorHandler, {
+    provide: HttpHandler,
+    useExisting: HttpInterceptorHandler
+  }, {
+    provide: HttpBackend,
+    useExisting: HttpXhrBackend
+  }, {
+    provide: HTTP_INTERCEPTOR_FNS,
+    useValue: xsrfInterceptorFn,
+    multi: true
+  }, {
+    provide: XSRF_ENABLED,
+    useValue: true
+  }, {
+    provide: HttpXsrfTokenExtractor,
+    useClass: HttpXsrfCookieExtractor
+  }];
+  for (const feature of features) {
+    providers.push(...feature.\u0275providers);
+  }
+  return makeEnvironmentProviders(providers);
+}
+var LEGACY_INTERCEPTOR_FN = new InjectionToken("LEGACY_INTERCEPTOR_FN");
+function withInterceptorsFromDi() {
+  return makeHttpFeature(HttpFeatureKind.LegacyInterceptors, [{
+    provide: LEGACY_INTERCEPTOR_FN,
+    useFactory: legacyInterceptorFnFactory
+  }, {
+    provide: HTTP_INTERCEPTOR_FNS,
+    useExisting: LEGACY_INTERCEPTOR_FN,
+    multi: true
+  }]);
+}
+function withXsrfConfiguration({
+  cookieName,
+  headerName
+}) {
+  const providers = [];
+  if (cookieName !== void 0) {
+    providers.push({
+      provide: XSRF_COOKIE_NAME,
+      useValue: cookieName
+    });
+  }
+  if (headerName !== void 0) {
+    providers.push({
+      provide: XSRF_HEADER_NAME,
+      useValue: headerName
+    });
+  }
+  return makeHttpFeature(HttpFeatureKind.CustomXsrfConfiguration, providers);
+}
+function withNoXsrfProtection() {
+  return makeHttpFeature(HttpFeatureKind.NoXsrfProtection, [{
+    provide: XSRF_ENABLED,
+    useValue: false
+  }]);
+}
+function withJsonpSupport() {
+  return makeHttpFeature(HttpFeatureKind.JsonpSupport, [JsonpClientBackend, {
+    provide: JsonpCallbackContext,
+    useFactory: jsonpCallbackContext
+  }, {
+    provide: HTTP_INTERCEPTOR_FNS,
+    useValue: jsonpInterceptorFn,
+    multi: true
+  }]);
+}
+var _HttpClientXsrfModule = class _HttpClientXsrfModule {
+  /**
+   * Disable the default XSRF protection.
+   */
+  static disable() {
+    return {
+      ngModule: _HttpClientXsrfModule,
+      providers: [withNoXsrfProtection().\u0275providers]
+    };
+  }
+  /**
+   * Configure XSRF protection.
+   * @param options An object that can specify either or both
+   * cookie name or header name.
+   * - Cookie name default is `XSRF-TOKEN`.
+   * - Header name default is `X-XSRF-TOKEN`.
+   *
+   */
+  static withOptions(options = {}) {
+    return {
+      ngModule: _HttpClientXsrfModule,
+      providers: withXsrfConfiguration(options).\u0275providers
+    };
+  }
+};
+_HttpClientXsrfModule.\u0275fac = function HttpClientXsrfModule_Factory(t) {
+  return new (t || _HttpClientXsrfModule)();
+};
+_HttpClientXsrfModule.\u0275mod = /* @__PURE__ */ \u0275\u0275defineNgModule({
+  type: _HttpClientXsrfModule
+});
+_HttpClientXsrfModule.\u0275inj = /* @__PURE__ */ \u0275\u0275defineInjector({
+  providers: [HttpXsrfInterceptor, {
+    provide: HTTP_INTERCEPTORS,
+    useExisting: HttpXsrfInterceptor,
+    multi: true
+  }, {
+    provide: HttpXsrfTokenExtractor,
+    useClass: HttpXsrfCookieExtractor
+  }, withXsrfConfiguration({
+    cookieName: XSRF_DEFAULT_COOKIE_NAME,
+    headerName: XSRF_DEFAULT_HEADER_NAME
+  }).\u0275providers, {
+    provide: XSRF_ENABLED,
+    useValue: true
+  }]
+});
+var HttpClientXsrfModule = _HttpClientXsrfModule;
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(HttpClientXsrfModule, [{
+    type: NgModule,
+    args: [{
+      providers: [HttpXsrfInterceptor, {
+        provide: HTTP_INTERCEPTORS,
+        useExisting: HttpXsrfInterceptor,
+        multi: true
+      }, {
+        provide: HttpXsrfTokenExtractor,
+        useClass: HttpXsrfCookieExtractor
+      }, withXsrfConfiguration({
+        cookieName: XSRF_DEFAULT_COOKIE_NAME,
+        headerName: XSRF_DEFAULT_HEADER_NAME
+      }).\u0275providers, {
+        provide: XSRF_ENABLED,
+        useValue: true
+      }]
+    }]
+  }], null, null);
+})();
+var _HttpClientModule = class _HttpClientModule {
+};
+_HttpClientModule.\u0275fac = function HttpClientModule_Factory(t) {
+  return new (t || _HttpClientModule)();
+};
+_HttpClientModule.\u0275mod = /* @__PURE__ */ \u0275\u0275defineNgModule({
+  type: _HttpClientModule
+});
+_HttpClientModule.\u0275inj = /* @__PURE__ */ \u0275\u0275defineInjector({
+  providers: [provideHttpClient(withInterceptorsFromDi())]
+});
+var HttpClientModule = _HttpClientModule;
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(HttpClientModule, [{
+    type: NgModule,
+    args: [{
+      /**
+       * Configures the [dependency injector](guide/glossary#injector) where it is imported
+       * with supporting services for HTTP communications.
+       */
+      providers: [provideHttpClient(withInterceptorsFromDi())]
+    }]
+  }], null, null);
+})();
+var _HttpClientJsonpModule = class _HttpClientJsonpModule {
+};
+_HttpClientJsonpModule.\u0275fac = function HttpClientJsonpModule_Factory(t) {
+  return new (t || _HttpClientJsonpModule)();
+};
+_HttpClientJsonpModule.\u0275mod = /* @__PURE__ */ \u0275\u0275defineNgModule({
+  type: _HttpClientJsonpModule
+});
+_HttpClientJsonpModule.\u0275inj = /* @__PURE__ */ \u0275\u0275defineInjector({
+  providers: [withJsonpSupport().\u0275providers]
+});
+var HttpClientJsonpModule = _HttpClientJsonpModule;
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(HttpClientJsonpModule, [{
+    type: NgModule,
+    args: [{
+      providers: [withJsonpSupport().\u0275providers]
+    }]
+  }], null, null);
+})();
+var CACHE_OPTIONS = new InjectionToken(ngDevMode ? "HTTP_TRANSFER_STATE_CACHE_OPTIONS" : "");
+
 // node_modules/@angular/platform-browser/fesm2022/platform-browser.mjs
 var GenericBrowserDomAdapter = class extends DomAdapter {
   constructor() {
@@ -24389,18 +26321,18 @@ var _SharedStylesHost = class _SharedStylesHost {
     this.resetHostNodes();
   }
   addStyles(styles) {
-    for (const style2 of styles) {
-      const usageCount = this.changeUsageCount(style2, 1);
+    for (const style of styles) {
+      const usageCount = this.changeUsageCount(style, 1);
       if (usageCount === 1) {
-        this.onStyleAdded(style2);
+        this.onStyleAdded(style);
       }
     }
   }
   removeStyles(styles) {
-    for (const style2 of styles) {
-      const usageCount = this.changeUsageCount(style2, -1);
+    for (const style of styles) {
+      const usageCount = this.changeUsageCount(style, -1);
       if (usageCount <= 0) {
-        this.onStyleRemoved(style2);
+        this.onStyleRemoved(style);
       }
     }
   }
@@ -24410,15 +26342,15 @@ var _SharedStylesHost = class _SharedStylesHost {
       styleNodesInDOM.forEach((node) => node.remove());
       styleNodesInDOM.clear();
     }
-    for (const style2 of this.getAllStyles()) {
-      this.onStyleRemoved(style2);
+    for (const style of this.getAllStyles()) {
+      this.onStyleRemoved(style);
     }
     this.resetHostNodes();
   }
   addHost(hostNode) {
     this.hostNodes.add(hostNode);
-    for (const style2 of this.getAllStyles()) {
-      this.addStyleToHost(hostNode, style2);
+    for (const style of this.getAllStyles()) {
+      this.addStyleToHost(hostNode, style);
     }
   }
   removeHost(hostNode) {
@@ -24427,47 +26359,47 @@ var _SharedStylesHost = class _SharedStylesHost {
   getAllStyles() {
     return this.styleRef.keys();
   }
-  onStyleAdded(style2) {
+  onStyleAdded(style) {
     for (const host of this.hostNodes) {
-      this.addStyleToHost(host, style2);
+      this.addStyleToHost(host, style);
     }
   }
-  onStyleRemoved(style2) {
+  onStyleRemoved(style) {
     const styleRef = this.styleRef;
-    styleRef.get(style2)?.elements?.forEach((node) => node.remove());
-    styleRef.delete(style2);
+    styleRef.get(style)?.elements?.forEach((node) => node.remove());
+    styleRef.delete(style);
   }
   collectServerRenderedStyles() {
     const styles = this.doc.head?.querySelectorAll(`style[${APP_ID_ATTRIBUTE_NAME}="${this.appId}"]`);
     if (styles?.length) {
       const styleMap = /* @__PURE__ */ new Map();
-      styles.forEach((style2) => {
-        if (style2.textContent != null) {
-          styleMap.set(style2.textContent, style2);
+      styles.forEach((style) => {
+        if (style.textContent != null) {
+          styleMap.set(style.textContent, style);
         }
       });
       return styleMap;
     }
     return null;
   }
-  changeUsageCount(style2, delta) {
+  changeUsageCount(style, delta) {
     const map2 = this.styleRef;
-    if (map2.has(style2)) {
-      const styleRefValue = map2.get(style2);
+    if (map2.has(style)) {
+      const styleRefValue = map2.get(style);
       styleRefValue.usage += delta;
       return styleRefValue.usage;
     }
-    map2.set(style2, {
+    map2.set(style, {
       usage: delta,
       elements: []
     });
     return delta;
   }
-  getStyleElement(host, style2) {
+  getStyleElement(host, style) {
     const styleNodesInDOM = this.styleNodesInDOM;
-    const styleEl = styleNodesInDOM?.get(style2);
+    const styleEl = styleNodesInDOM?.get(style);
     if (styleEl?.parentNode === host) {
-      styleNodesInDOM.delete(style2);
+      styleNodesInDOM.delete(style);
       styleEl.removeAttribute(APP_ID_ATTRIBUTE_NAME);
       if (typeof ngDevMode === "undefined" || ngDevMode) {
         styleEl.setAttribute("ng-style-reused", "");
@@ -24478,7 +26410,7 @@ var _SharedStylesHost = class _SharedStylesHost {
       if (this.nonce) {
         styleEl2.setAttribute("nonce", this.nonce);
       }
-      styleEl2.textContent = style2;
+      styleEl2.textContent = style;
       if (this.platformIsServer) {
         styleEl2.setAttribute(APP_ID_ATTRIBUTE_NAME, this.appId);
       }
@@ -24486,14 +26418,14 @@ var _SharedStylesHost = class _SharedStylesHost {
       return styleEl2;
     }
   }
-  addStyleToHost(host, style2) {
-    const styleEl = this.getStyleElement(host, style2);
+  addStyleToHost(host, style) {
+    const styleEl = this.getStyleElement(host, style);
     const styleRef = this.styleRef;
-    const styleElRef = styleRef.get(style2)?.elements;
+    const styleElRef = styleRef.get(style)?.elements;
     if (styleElRef) {
       styleElRef.push(styleEl);
     } else {
-      styleRef.set(style2, {
+      styleRef.set(style, {
         elements: [styleEl],
         usage: 1
       });
@@ -24764,18 +26696,18 @@ var DefaultDomRenderer2 = class {
   removeClass(el, name) {
     el.classList.remove(name);
   }
-  setStyle(el, style2, value, flags) {
+  setStyle(el, style, value, flags) {
     if (flags & (RendererStyleFlags2.DashCase | RendererStyleFlags2.Important)) {
-      el.style.setProperty(style2, value, flags & RendererStyleFlags2.Important ? "important" : "");
+      el.style.setProperty(style, value, flags & RendererStyleFlags2.Important ? "important" : "");
     } else {
-      el.style[style2] = value;
+      el.style[style] = value;
     }
   }
-  removeStyle(el, style2, flags) {
+  removeStyle(el, style, flags) {
     if (flags & RendererStyleFlags2.DashCase) {
-      el.style.removeProperty(style2);
+      el.style.removeProperty(style);
     } else {
-      el.style[style2] = "";
+      el.style[style] = "";
     }
   }
   setProperty(el, name, value) {
@@ -24832,12 +26764,12 @@ var ShadowDomRenderer = class extends DefaultDomRenderer2 {
     });
     this.sharedStylesHost.addHost(this.shadowRoot);
     const styles = shimStylesContent(component.id, component.styles);
-    for (const style2 of styles) {
+    for (const style of styles) {
       const styleEl = document.createElement("style");
       if (nonce) {
         styleEl.setAttribute("nonce", nonce);
       }
-      styleEl.textContent = style2;
+      styleEl.textContent = style;
       this.shadowRoot.appendChild(styleEl);
     }
   }
@@ -26739,10 +28671,10 @@ var NavigationError = class extends RouterEvent {
   }
 };
 var RoutesRecognized = class extends RouterEvent {
-  constructor(id, url, urlAfterRedirects, state2) {
+  constructor(id, url, urlAfterRedirects, state) {
     super(id, url);
     this.urlAfterRedirects = urlAfterRedirects;
-    this.state = state2;
+    this.state = state;
     this.type = 4;
   }
   /** @docsNotRequired */
@@ -26751,10 +28683,10 @@ var RoutesRecognized = class extends RouterEvent {
   }
 };
 var GuardsCheckStart = class extends RouterEvent {
-  constructor(id, url, urlAfterRedirects, state2) {
+  constructor(id, url, urlAfterRedirects, state) {
     super(id, url);
     this.urlAfterRedirects = urlAfterRedirects;
-    this.state = state2;
+    this.state = state;
     this.type = 7;
   }
   toString() {
@@ -26762,10 +28694,10 @@ var GuardsCheckStart = class extends RouterEvent {
   }
 };
 var GuardsCheckEnd = class extends RouterEvent {
-  constructor(id, url, urlAfterRedirects, state2, shouldActivate) {
+  constructor(id, url, urlAfterRedirects, state, shouldActivate) {
     super(id, url);
     this.urlAfterRedirects = urlAfterRedirects;
-    this.state = state2;
+    this.state = state;
     this.shouldActivate = shouldActivate;
     this.type = 8;
   }
@@ -26774,10 +28706,10 @@ var GuardsCheckEnd = class extends RouterEvent {
   }
 };
 var ResolveStart = class extends RouterEvent {
-  constructor(id, url, urlAfterRedirects, state2) {
+  constructor(id, url, urlAfterRedirects, state) {
     super(id, url);
     this.urlAfterRedirects = urlAfterRedirects;
-    this.state = state2;
+    this.state = state;
     this.type = 5;
   }
   toString() {
@@ -26785,10 +28717,10 @@ var ResolveStart = class extends RouterEvent {
   }
 };
 var ResolveEnd = class extends RouterEvent {
-  constructor(id, url, urlAfterRedirects, state2) {
+  constructor(id, url, urlAfterRedirects, state) {
     super(id, url);
     this.urlAfterRedirects = urlAfterRedirects;
-    this.state = state2;
+    this.state = state;
     this.type = 6;
   }
   toString() {
@@ -27254,9 +29186,9 @@ var RouterStateSnapshot = class extends Tree {
     return serializeNode(this._root);
   }
 };
-function setRouterState(state2, node) {
-  node.value._routerState = state2;
-  node.children.forEach((c) => setRouterState(state2, c));
+function setRouterState(state, node) {
+  node.value._routerState = state;
+  node.children.forEach((c) => setRouterState(state, c));
 }
 function serializeNode(node) {
   const c = node.children.length > 0 ? ` { ${node.children.map(serializeNode).join(", ")} } ` : "";
@@ -29042,7 +30974,7 @@ function createViewTransition(injector, from2, to) {
     const viewTransitionStarted = new Promise((resolve) => {
       resolveViewTransitionStarted = resolve;
     });
-    const transition2 = document2.startViewTransition(() => {
+    const transition = document2.startViewTransition(() => {
       resolveViewTransitionStarted();
       return createRenderPromise(injector);
     });
@@ -29051,7 +30983,7 @@ function createViewTransition(injector, from2, to) {
     } = transitionOptions;
     if (onViewTransitionCreated) {
       runInInjectionContext(injector, () => onViewTransitionCreated({
-        transition: transition2,
+        transition,
         from: from2,
         to
       }));
@@ -29178,9 +31110,9 @@ var _NavigationTransitions = class _NavigationTransitions {
               return of(t).pipe(
                 // Fire NavigationStart event
                 switchMap((t2) => {
-                  const transition2 = this.transitions?.getValue();
+                  const transition = this.transitions?.getValue();
                   this.events.next(new NavigationStart(t2.id, this.urlSerializer.serialize(t2.extractedUrl), t2.source, t2.restoredState));
-                  if (transition2 !== this.transitions?.getValue()) {
+                  if (transition !== this.transitions?.getValue()) {
                     return EMPTY;
                   }
                   return Promise.resolve(t2);
@@ -29611,15 +31543,15 @@ var _HistoryStateManager = class _HistoryStateManager extends StateManager {
       this.currentPageId = this.browserPageId;
     }
   }
-  setBrowserUrl(url, transition2) {
+  setBrowserUrl(url, transition) {
     const path = this.urlSerializer.serialize(url);
-    if (this.location.isCurrentPathEqualTo(path) || !!transition2.extras.replaceUrl) {
+    if (this.location.isCurrentPathEqualTo(path) || !!transition.extras.replaceUrl) {
       const currentBrowserPageId = this.browserPageId;
-      const state2 = __spreadValues(__spreadValues({}, transition2.extras.state), this.generateNgRouterState(transition2.id, currentBrowserPageId));
-      this.location.replaceState(path, "", state2);
+      const state = __spreadValues(__spreadValues({}, transition.extras.state), this.generateNgRouterState(transition.id, currentBrowserPageId));
+      this.location.replaceState(path, "", state);
     } else {
-      const state2 = __spreadValues(__spreadValues({}, transition2.extras.state), this.generateNgRouterState(transition2.id, this.browserPageId + 1));
-      this.location.go(path, "", state2);
+      const state = __spreadValues(__spreadValues({}, transition.extras.state), this.generateNgRouterState(transition.id, this.browserPageId + 1));
+      this.location.go(path, "", state);
     }
   }
   /**
@@ -29828,9 +31760,9 @@ var _Router = class _Router {
    */
   setUpLocationChangeListener() {
     if (!this.nonRouterCurrentEntryChangeSubscription) {
-      this.nonRouterCurrentEntryChangeSubscription = this.stateManager.registerNonRouterCurrentEntryChangeListener((url, state2) => {
+      this.nonRouterCurrentEntryChangeSubscription = this.stateManager.registerNonRouterCurrentEntryChangeListener((url, state) => {
         setTimeout(() => {
-          this.navigateToSyncWithBrowser(url, "popstate", state2);
+          this.navigateToSyncWithBrowser(url, "popstate", state);
         }, 0);
       });
     }
@@ -29842,13 +31774,13 @@ var _Router = class _Router {
    * two scenarios represent times when the browser URL/state has been updated and
    * the Router needs to respond to ensure its internal state matches.
    */
-  navigateToSyncWithBrowser(url, source, state2) {
+  navigateToSyncWithBrowser(url, source, state) {
     const extras = {
       replaceUrl: true
     };
-    const restoredState = state2?.navigationId ? state2 : null;
-    if (state2) {
-      const stateCopy = __spreadValues({}, state2);
+    const restoredState = state?.navigationId ? state : null;
+    if (state) {
+      const stateCopy = __spreadValues({}, state);
       delete stateCopy.navigationId;
       delete stateCopy.\u0275routerPageId;
       if (Object.keys(stateCopy).length !== 0) {
@@ -33301,14 +35233,14 @@ function setUpControl(control, dir, callSetDisabledState = setDisabledStateDefau
   setUpDisabledChangeHandler(control, dir);
 }
 function cleanUpControl(control, dir, validateControlPresenceOnChange = true) {
-  const noop3 = () => {
+  const noop4 = () => {
     if (validateControlPresenceOnChange && (typeof ngDevMode === "undefined" || ngDevMode)) {
       _noControlError(dir);
     }
   };
   if (dir.valueAccessor) {
-    dir.valueAccessor.registerOnChange(noop3);
-    dir.valueAccessor.registerOnTouched(noop3);
+    dir.valueAccessor.registerOnChange(noop4);
+    dir.valueAccessor.registerOnTouched(noop4);
   }
   cleanUpValidators(control, dir);
   if (control) {
@@ -33375,10 +35307,10 @@ function cleanUpValidators(control, dir) {
       }
     }
   }
-  const noop3 = () => {
+  const noop4 = () => {
   };
-  registerOnValidatorChange(dir._rawValidators, noop3);
-  registerOnValidatorChange(dir._rawAsyncValidators, noop3);
+  registerOnValidatorChange(dir._rawValidators, noop4);
+  registerOnValidatorChange(dir._rawAsyncValidators, noop4);
   return isControlUpdated;
 }
 function setUpViewChangePipeline(control, dir) {
@@ -37439,23 +39371,26 @@ var SlickCarouselModule = class _SlickCarouselModule {
 
 // src/app/services/products/products.services.ts
 var _ProductServices = class _ProductServices {
-  constructor() {
-    this.productsURL = "https://sachinlti1224.github.io/g-mart/db.json";
+  constructor(http) {
+    this.http = http;
+    this.productsURL = "https://my-json-server.typicode.com/sachinlti1224/g-mart/products/";
   }
   // Get all products read
+  // async getAllProducts(): Promise<Product[]> {
+  //   console.log(this.productsURL)
+  //   const data = await fetch(this.productsURL);
+  //   console.log(data)
+  //   return (await data.json()) ?? []; //return array if null data
+  // }
   getAllProducts() {
-    return __async(this, null, function* () {
-      console.log(this.productsURL);
-      const data = yield fetch(this.productsURL);
-      console.log(data);
-      return (yield data.json()) ?? [];
-    });
+    return this.http.get(this.productsURL);
   }
+  // async getProductById(Id: number): Promise<Product | undefined> {
+  //   const data = await fetch(`${this.productsURL}/${Id}`);
+  //   return (await data.json()) ?? []; //return array if null data
+  // }
   getProductById(Id) {
-    return __async(this, null, function* () {
-      const data = yield fetch(`${this.productsURL}/${Id}`);
-      return (yield data.json()) ?? [];
-    });
+    return this.http.get(`${this.productsURL}/${Id}`);
   }
   getLatestProduct() {
     return __async(this, null, function* () {
@@ -37471,7 +39406,7 @@ var _ProductServices = class _ProductServices {
   }
 };
 _ProductServices.\u0275fac = function ProductServices_Factory(t) {
-  return new (t || _ProductServices)();
+  return new (t || _ProductServices)(\u0275\u0275inject(HttpClient));
 };
 _ProductServices.\u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _ProductServices, factory: _ProductServices.\u0275fac, providedIn: "root" });
 var ProductServices = _ProductServices;
@@ -37623,9 +39558,6 @@ var _LatestProductsComponent = class _LatestProductsComponent {
     this.cartservice = cartservice;
     this.ShowDetailsClicked = new EventEmitter();
     this.pruductArr = [];
-    this.productServices.getAllProducts().then((productList) => {
-      this.pruductArr = productList;
-    });
   }
   addCartItem(product) {
     this.cartservice.addToCart(product);
@@ -37649,777 +39581,6 @@ _LatestProductsComponent.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent
 var LatestProductsComponent = _LatestProductsComponent;
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(LatestProductsComponent, { className: "LatestProductsComponent", filePath: "src\\app\\latest-products\\latest-products.component.ts", lineNumber: 16 });
-})();
-
-// node_modules/@angular/animations/fesm2022/animations.mjs
-function trigger(name, definitions) {
-  return {
-    type: 7,
-    name,
-    definitions,
-    options: {}
-  };
-}
-function animate(timings, styles = null) {
-  return {
-    type: 4,
-    styles,
-    timings
-  };
-}
-function sequence(steps, options = null) {
-  return {
-    type: 2,
-    steps,
-    options
-  };
-}
-function style(tokens) {
-  return {
-    type: 6,
-    styles: tokens,
-    offset: null
-  };
-}
-function state(name, styles, options) {
-  return {
-    type: 0,
-    name,
-    styles,
-    options
-  };
-}
-function transition(stateChangeExpr, steps, options = null) {
-  return {
-    type: 1,
-    expr: stateChangeExpr,
-    animation: steps,
-    options
-  };
-}
-var _AnimationBuilder = class _AnimationBuilder {
-};
-_AnimationBuilder.\u0275fac = function AnimationBuilder_Factory(t) {
-  return new (t || _AnimationBuilder)();
-};
-_AnimationBuilder.\u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
-  token: _AnimationBuilder,
-  factory: () => (() => inject(BrowserAnimationBuilder))(),
-  providedIn: "root"
-});
-var AnimationBuilder = _AnimationBuilder;
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AnimationBuilder, [{
-    type: Injectable,
-    args: [{
-      providedIn: "root",
-      useFactory: () => inject(BrowserAnimationBuilder)
-    }]
-  }], null, null);
-})();
-var AnimationFactory = class {
-};
-var _BrowserAnimationBuilder = class _BrowserAnimationBuilder extends AnimationBuilder {
-  constructor(rootRenderer, doc) {
-    super();
-    this.animationModuleType = inject(ANIMATION_MODULE_TYPE, {
-      optional: true
-    });
-    this._nextAnimationId = 0;
-    const typeData = {
-      id: "0",
-      encapsulation: ViewEncapsulation$1.None,
-      styles: [],
-      data: {
-        animation: []
-      }
-    };
-    this._renderer = rootRenderer.createRenderer(doc.body, typeData);
-    if (this.animationModuleType === null && !isAnimationRenderer(this._renderer)) {
-      throw new RuntimeError(3600, (typeof ngDevMode === "undefined" || ngDevMode) && "Angular detected that the `AnimationBuilder` was injected, but animation support was not enabled. Please make sure that you enable animations in your application by calling `provideAnimations()` or `provideAnimationsAsync()` function.");
-    }
-  }
-  build(animation) {
-    const id = this._nextAnimationId;
-    this._nextAnimationId++;
-    const entry = Array.isArray(animation) ? sequence(animation) : animation;
-    issueAnimationCommand(this._renderer, null, id, "register", [entry]);
-    return new BrowserAnimationFactory(id, this._renderer);
-  }
-};
-_BrowserAnimationBuilder.\u0275fac = function BrowserAnimationBuilder_Factory(t) {
-  return new (t || _BrowserAnimationBuilder)(\u0275\u0275inject(RendererFactory2), \u0275\u0275inject(DOCUMENT2));
-};
-_BrowserAnimationBuilder.\u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
-  token: _BrowserAnimationBuilder,
-  factory: _BrowserAnimationBuilder.\u0275fac,
-  providedIn: "root"
-});
-var BrowserAnimationBuilder = _BrowserAnimationBuilder;
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(BrowserAnimationBuilder, [{
-    type: Injectable,
-    args: [{
-      providedIn: "root"
-    }]
-  }], () => [{
-    type: RendererFactory2
-  }, {
-    type: Document,
-    decorators: [{
-      type: Inject,
-      args: [DOCUMENT2]
-    }]
-  }], null);
-})();
-var BrowserAnimationFactory = class extends AnimationFactory {
-  constructor(_id, _renderer) {
-    super();
-    this._id = _id;
-    this._renderer = _renderer;
-  }
-  create(element, options) {
-    return new RendererAnimationPlayer(this._id, element, options || {}, this._renderer);
-  }
-};
-var RendererAnimationPlayer = class {
-  constructor(id, element, options, _renderer) {
-    this.id = id;
-    this.element = element;
-    this._renderer = _renderer;
-    this.parentPlayer = null;
-    this._started = false;
-    this.totalTime = 0;
-    this._command("create", options);
-  }
-  _listen(eventName, callback) {
-    return this._renderer.listen(this.element, `@@${this.id}:${eventName}`, callback);
-  }
-  _command(command, ...args) {
-    issueAnimationCommand(this._renderer, this.element, this.id, command, args);
-  }
-  onDone(fn) {
-    this._listen("done", fn);
-  }
-  onStart(fn) {
-    this._listen("start", fn);
-  }
-  onDestroy(fn) {
-    this._listen("destroy", fn);
-  }
-  init() {
-    this._command("init");
-  }
-  hasStarted() {
-    return this._started;
-  }
-  play() {
-    this._command("play");
-    this._started = true;
-  }
-  pause() {
-    this._command("pause");
-  }
-  restart() {
-    this._command("restart");
-  }
-  finish() {
-    this._command("finish");
-  }
-  destroy() {
-    this._command("destroy");
-  }
-  reset() {
-    this._command("reset");
-    this._started = false;
-  }
-  setPosition(p) {
-    this._command("setPosition", p);
-  }
-  getPosition() {
-    return unwrapAnimationRenderer(this._renderer)?.engine?.players[this.id]?.getPosition() ?? 0;
-  }
-};
-function issueAnimationCommand(renderer, element, id, command, args) {
-  renderer.setProperty(element, `@@${id}:${command}`, args);
-}
-function unwrapAnimationRenderer(renderer) {
-  const type = renderer.\u0275type;
-  if (type === 0) {
-    return renderer;
-  } else if (type === 1) {
-    return renderer.animationRenderer;
-  }
-  return null;
-}
-function isAnimationRenderer(renderer) {
-  const type = renderer.\u0275type;
-  return type === 0 || type === 1;
-}
-
-// node_modules/ngx-spinner/fesm2022/ngx-spinner.mjs
-var _c02 = ["overlay"];
-function NgxSpinnerComponent_div_0_div_2_div_1_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275element(0, "div");
-  }
-}
-function NgxSpinnerComponent_div_0_div_2_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "div");
-    \u0275\u0275template(1, NgxSpinnerComponent_div_0_div_2_div_1_Template, 1, 0, "div", 6);
-    \u0275\u0275elementEnd();
-  }
-  if (rf & 2) {
-    const ctx_r2 = \u0275\u0275nextContext(2);
-    \u0275\u0275classMap(ctx_r2.spinner.class);
-    \u0275\u0275styleProp("color", ctx_r2.spinner.color);
-    \u0275\u0275advance(1);
-    \u0275\u0275property("ngForOf", ctx_r2.spinner.divArray);
-  }
-}
-function NgxSpinnerComponent_div_0_div_3_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275element(0, "div", 7);
-    \u0275\u0275pipe(1, "safeHtml");
-  }
-  if (rf & 2) {
-    const ctx_r3 = \u0275\u0275nextContext(2);
-    \u0275\u0275property("innerHTML", \u0275\u0275pipeBind1(1, 1, ctx_r3.template), \u0275\u0275sanitizeHtml);
-  }
-}
-function NgxSpinnerComponent_div_0_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 1, 2);
-    \u0275\u0275template(2, NgxSpinnerComponent_div_0_div_2_Template, 2, 5, "div", 3)(3, NgxSpinnerComponent_div_0_div_3_Template, 2, 3, "div", 4);
-    \u0275\u0275elementStart(4, "div", 5);
-    \u0275\u0275projection(5);
-    \u0275\u0275elementEnd()();
-  }
-  if (rf & 2) {
-    const ctx_r0 = \u0275\u0275nextContext();
-    \u0275\u0275styleProp("background-color", ctx_r0.spinner.bdColor)("z-index", ctx_r0.spinner.zIndex)("position", ctx_r0.spinner.fullScreen ? "fixed" : "absolute");
-    \u0275\u0275property("@.disabled", ctx_r0.disableAnimation)("@fadeIn", "in");
-    \u0275\u0275advance(2);
-    \u0275\u0275property("ngIf", !ctx_r0.template);
-    \u0275\u0275advance(1);
-    \u0275\u0275property("ngIf", ctx_r0.template);
-    \u0275\u0275advance(1);
-    \u0275\u0275styleProp("z-index", ctx_r0.spinner.zIndex);
-  }
-}
-var _c1 = ["*"];
-var LOADERS = {
-  "ball-8bits": 16,
-  "ball-atom": 4,
-  "ball-beat": 3,
-  "ball-circus": 5,
-  "ball-climbing-dot": 4,
-  "ball-clip-rotate": 1,
-  "ball-clip-rotate-multiple": 2,
-  "ball-clip-rotate-pulse": 2,
-  "ball-elastic-dots": 5,
-  "ball-fall": 3,
-  "ball-fussion": 4,
-  "ball-grid-beat": 9,
-  "ball-grid-pulse": 9,
-  "ball-newton-cradle": 4,
-  "ball-pulse": 3,
-  "ball-pulse-rise": 5,
-  "ball-pulse-sync": 3,
-  "ball-rotate": 1,
-  "ball-running-dots": 5,
-  "ball-scale": 1,
-  "ball-scale-multiple": 3,
-  "ball-scale-pulse": 2,
-  "ball-scale-ripple": 1,
-  "ball-scale-ripple-multiple": 3,
-  "ball-spin": 8,
-  "ball-spin-clockwise": 8,
-  "ball-spin-clockwise-fade": 8,
-  "ball-spin-clockwise-fade-rotating": 8,
-  "ball-spin-fade": 8,
-  "ball-spin-fade-rotating": 8,
-  "ball-spin-rotate": 2,
-  "ball-square-clockwise-spin": 8,
-  "ball-square-spin": 8,
-  "ball-triangle-path": 3,
-  "ball-zig-zag": 2,
-  "ball-zig-zag-deflect": 2,
-  cog: 1,
-  "cube-transition": 2,
-  fire: 3,
-  "line-scale": 5,
-  "line-scale-party": 5,
-  "line-scale-pulse-out": 5,
-  "line-scale-pulse-out-rapid": 5,
-  "line-spin-clockwise-fade": 8,
-  "line-spin-clockwise-fade-rotating": 8,
-  "line-spin-fade": 8,
-  "line-spin-fade-rotating": 8,
-  pacman: 6,
-  "square-jelly-box": 2,
-  "square-loader": 1,
-  "square-spin": 1,
-  timer: 1,
-  "triangle-skew-spin": 1
-};
-var DEFAULTS = {
-  BD_COLOR: "rgba(51,51,51,0.8)",
-  SPINNER_COLOR: "#fff",
-  Z_INDEX: 99999
-};
-var PRIMARY_SPINNER = "primary";
-var NgxSpinner = class _NgxSpinner {
-  constructor(init) {
-    Object.assign(this, init);
-  }
-  static create(init) {
-    if (!init?.template && !init?.type) {
-      console.warn(`[ngx-spinner]: Property "type" is missed. Please, provide animation type to <ngx-spinner> component
-        and ensure css is added to angular.json file`);
-    }
-    return new _NgxSpinner(init);
-  }
-};
-var _NgxSpinnerService = class _NgxSpinnerService {
-  /**
-   * Creates an instance of NgxSpinnerService.
-   * @memberof NgxSpinnerService
-   */
-  constructor() {
-    this.spinnerObservable = new BehaviorSubject(null);
-  }
-  /**
-   * Get subscription of desired spinner
-   * @memberof NgxSpinnerService
-   **/
-  getSpinner(name) {
-    return this.spinnerObservable.asObservable().pipe(filter((x) => x && x.name === name));
-  }
-  /**
-   * To show spinner
-   *
-   * @memberof NgxSpinnerService
-   */
-  show(name = PRIMARY_SPINNER, spinner) {
-    return new Promise((resolve, _reject) => {
-      setTimeout(() => {
-        if (spinner && Object.keys(spinner).length) {
-          spinner["name"] = name;
-          this.spinnerObservable.next(new NgxSpinner(__spreadProps(__spreadValues({}, spinner), {
-            show: true
-          })));
-          resolve(true);
-        } else {
-          this.spinnerObservable.next(new NgxSpinner({
-            name,
-            show: true
-          }));
-          resolve(true);
-        }
-      }, 10);
-    });
-  }
-  /**
-   * To hide spinner
-   *
-   * @memberof NgxSpinnerService
-   */
-  hide(name = PRIMARY_SPINNER, debounce = 10) {
-    return new Promise((resolve, _reject) => {
-      setTimeout(() => {
-        this.spinnerObservable.next(new NgxSpinner({
-          name,
-          show: false
-        }));
-        resolve(true);
-      }, debounce);
-    });
-  }
-};
-_NgxSpinnerService.\u0275fac = function NgxSpinnerService_Factory(t) {
-  return new (t || _NgxSpinnerService)();
-};
-_NgxSpinnerService.\u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
-  token: _NgxSpinnerService,
-  factory: _NgxSpinnerService.\u0275fac,
-  providedIn: "root"
-});
-var NgxSpinnerService = _NgxSpinnerService;
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(NgxSpinnerService, [{
-    type: Injectable,
-    args: [{
-      providedIn: "root"
-    }]
-  }], () => [], null);
-})();
-var NGX_SPINNER_CONFIG = new InjectionToken("NGX_SPINNER_CONFIG");
-var _SafeHtmlPipe = class _SafeHtmlPipe {
-  constructor(_sanitizer) {
-    this._sanitizer = _sanitizer;
-  }
-  transform(v) {
-    if (v) {
-      return this._sanitizer.bypassSecurityTrustHtml(v);
-    }
-  }
-};
-_SafeHtmlPipe.\u0275fac = function SafeHtmlPipe_Factory(t) {
-  return new (t || _SafeHtmlPipe)(\u0275\u0275directiveInject(DomSanitizer, 16));
-};
-_SafeHtmlPipe.\u0275pipe = /* @__PURE__ */ \u0275\u0275definePipe({
-  name: "safeHtml",
-  type: _SafeHtmlPipe,
-  pure: true,
-  standalone: true
-});
-var SafeHtmlPipe = _SafeHtmlPipe;
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(SafeHtmlPipe, [{
-    type: Pipe,
-    args: [{
-      name: "safeHtml",
-      standalone: true
-    }]
-  }], () => [{
-    type: DomSanitizer
-  }], null);
-})();
-var _NgxSpinnerComponent = class _NgxSpinnerComponent {
-  // TODO: https://github.com/Napster2210/ngx-spinner/issues/259
-  // @HostListener("document:keydown", ["$event"])
-  // handleKeyboardEvent(event: KeyboardEvent) {
-  //   if (this.spinnerDOM && this.spinnerDOM.nativeElement) {
-  //     if (
-  //       this.fullScreen ||
-  //       (!this.fullScreen && this.isSpinnerZone(event.target))
-  //     ) {
-  //       event.returnValue = false;
-  //       event.preventDefault();
-  //     }
-  //   }
-  // }
-  /**
-   * Creates an instance of NgxSpinnerComponent.
-   *
-   * @memberof NgxSpinnerComponent
-   */
-  constructor(spinnerService, changeDetector, elementRef, globalConfig) {
-    this.spinnerService = spinnerService;
-    this.changeDetector = changeDetector;
-    this.elementRef = elementRef;
-    this.globalConfig = globalConfig;
-    this.disableAnimation = false;
-    this.spinner = new NgxSpinner();
-    this.ngUnsubscribe = new Subject();
-    this.setDefaultOptions = () => {
-      const {
-        type
-      } = this.globalConfig ?? {};
-      this.spinner = NgxSpinner.create({
-        name: this.name,
-        bdColor: this.bdColor,
-        size: this.size,
-        color: this.color,
-        type: this.type ?? type,
-        fullScreen: this.fullScreen,
-        divArray: this.divArray,
-        divCount: this.divCount,
-        show: this.show,
-        zIndex: this.zIndex,
-        template: this.template,
-        showSpinner: this.showSpinner
-      });
-    };
-    this.bdColor = DEFAULTS.BD_COLOR;
-    this.zIndex = DEFAULTS.Z_INDEX;
-    this.color = DEFAULTS.SPINNER_COLOR;
-    this.size = "large";
-    this.fullScreen = true;
-    this.name = PRIMARY_SPINNER;
-    this.template = null;
-    this.showSpinner = false;
-    this.divArray = [];
-    this.divCount = 0;
-    this.show = false;
-  }
-  initObservable() {
-    this.spinnerService.getSpinner(this.name).pipe(takeUntil(this.ngUnsubscribe)).subscribe((spinner) => {
-      this.setDefaultOptions();
-      Object.assign(this.spinner, spinner);
-      if (spinner.show) {
-        this.onInputChange();
-      }
-      this.changeDetector.detectChanges();
-    });
-  }
-  /**
-   * Initialization method
-   *
-   * @memberof NgxSpinnerComponent
-   */
-  ngOnInit() {
-    this.setDefaultOptions();
-    this.initObservable();
-  }
-  /**
-   * To check event triggers inside the Spinner Zone
-   *
-   * @param {*} element
-   * @returns {boolean}
-   * @memberof NgxSpinnerComponent
-   */
-  isSpinnerZone(element) {
-    if (element === this.elementRef.nativeElement.parentElement) {
-      return true;
-    }
-    return element.parentNode && this.isSpinnerZone(element.parentNode);
-  }
-  /**
-   * On changes event for input variables
-   *
-   * @memberof NgxSpinnerComponent
-   */
-  ngOnChanges(changes) {
-    for (const propName in changes) {
-      if (propName) {
-        const changedProp = changes[propName];
-        if (changedProp.isFirstChange()) {
-          return;
-        } else if (typeof changedProp.currentValue !== "undefined" && changedProp.currentValue !== changedProp.previousValue) {
-          if (changedProp.currentValue !== "") {
-            this.spinner[propName] = changedProp.currentValue;
-            if (propName === "showSpinner") {
-              if (changedProp.currentValue) {
-                this.spinnerService.show(this.spinner.name, this.spinner);
-              } else {
-                this.spinnerService.hide(this.spinner.name);
-              }
-            }
-            if (propName === "name") {
-              this.initObservable();
-            }
-          }
-        }
-      }
-    }
-  }
-  /**
-   * To get class for spinner
-   *
-   * @memberof NgxSpinnerComponent
-   */
-  getClass(type, size) {
-    this.spinner.divCount = LOADERS[type];
-    this.spinner.divArray = Array(this.spinner.divCount).fill(0).map((_, i) => i);
-    let sizeClass = "";
-    switch (size.toLowerCase()) {
-      case "small":
-        sizeClass = "la-sm";
-        break;
-      case "medium":
-        sizeClass = "la-2x";
-        break;
-      case "large":
-        sizeClass = "la-3x";
-        break;
-      default:
-        break;
-    }
-    return "la-" + type + " " + sizeClass;
-  }
-  /**
-   * Check if input variables have changed
-   *
-   * @memberof NgxSpinnerComponent
-   */
-  onInputChange() {
-    this.spinner.class = this.getClass(this.spinner.type, this.spinner.size);
-  }
-  /**
-   * Component destroy event
-   *
-   * @memberof NgxSpinnerComponent
-   */
-  ngOnDestroy() {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
-  }
-};
-_NgxSpinnerComponent.\u0275fac = function NgxSpinnerComponent_Factory(t) {
-  return new (t || _NgxSpinnerComponent)(\u0275\u0275directiveInject(NgxSpinnerService), \u0275\u0275directiveInject(ChangeDetectorRef), \u0275\u0275directiveInject(ElementRef), \u0275\u0275directiveInject(NGX_SPINNER_CONFIG, 8));
-};
-_NgxSpinnerComponent.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({
-  type: _NgxSpinnerComponent,
-  selectors: [["ngx-spinner"]],
-  viewQuery: function NgxSpinnerComponent_Query(rf, ctx) {
-    if (rf & 1) {
-      \u0275\u0275viewQuery(_c02, 5);
-    }
-    if (rf & 2) {
-      let _t;
-      \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.spinnerDOM = _t.first);
-    }
-  },
-  inputs: {
-    bdColor: "bdColor",
-    size: "size",
-    color: "color",
-    type: "type",
-    fullScreen: "fullScreen",
-    name: "name",
-    zIndex: "zIndex",
-    template: "template",
-    showSpinner: "showSpinner",
-    disableAnimation: "disableAnimation"
-  },
-  standalone: true,
-  features: [\u0275\u0275NgOnChangesFeature, \u0275\u0275StandaloneFeature],
-  ngContentSelectors: _c1,
-  decls: 1,
-  vars: 1,
-  consts: [["class", "ngx-spinner-overlay", 3, "background-color", "z-index", "position", 4, "ngIf"], [1, "ngx-spinner-overlay"], ["overlay", ""], [3, "class", "color", 4, "ngIf"], [3, "innerHTML", 4, "ngIf"], [1, "loading-text"], [4, "ngFor", "ngForOf"], [3, "innerHTML"]],
-  template: function NgxSpinnerComponent_Template(rf, ctx) {
-    if (rf & 1) {
-      \u0275\u0275projectionDef();
-      \u0275\u0275template(0, NgxSpinnerComponent_div_0_Template, 6, 12, "div", 0);
-    }
-    if (rf & 2) {
-      \u0275\u0275property("ngIf", ctx.spinner.show);
-    }
-  },
-  dependencies: [SafeHtmlPipe, NgIf, NgForOf],
-  styles: [".ngx-spinner-overlay[_ngcontent-%COMP%]{position:fixed;top:0;left:0;width:100%;height:100%}.ngx-spinner-overlay[_ngcontent-%COMP%] > div[_ngcontent-%COMP%]:not(.loading-text){top:50%;left:50%;margin:0;position:absolute;transform:translate(-50%,-50%)}.loading-text[_ngcontent-%COMP%]{position:absolute;top:60%;left:50%;transform:translate(-50%,-60%)}"],
-  data: {
-    animation: [trigger("fadeIn", [state("in", style({
-      opacity: 1
-    })), transition(":enter", [style({
-      opacity: 0
-    }), animate(300)]), transition(":leave", animate(200, style({
-      opacity: 0
-    })))])]
-  },
-  changeDetection: 0
-});
-var NgxSpinnerComponent = _NgxSpinnerComponent;
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(NgxSpinnerComponent, [{
-    type: Component,
-    args: [{
-      imports: [SafeHtmlPipe, NgIf, NgForOf],
-      standalone: true,
-      selector: "ngx-spinner",
-      changeDetection: ChangeDetectionStrategy.OnPush,
-      animations: [trigger("fadeIn", [state("in", style({
-        opacity: 1
-      })), transition(":enter", [style({
-        opacity: 0
-      }), animate(300)]), transition(":leave", animate(200, style({
-        opacity: 0
-      })))])],
-      template: `<div
-  [@.disabled]="disableAnimation"
-  [@fadeIn]="'in'"
-  *ngIf="spinner.show"
-  class="ngx-spinner-overlay"
-  [style.background-color]="spinner.bdColor"
-  [style.z-index]="spinner.zIndex"
-  [style.position]="spinner.fullScreen ? 'fixed' : 'absolute'"
-  #overlay
->
-  <div *ngIf="!template" [class]="spinner.class" [style.color]="spinner.color">
-    <div *ngFor="let index of spinner.divArray"></div>
-  </div>
-  <div *ngIf="template" [innerHTML]="template | safeHtml"></div>
-  <div class="loading-text" [style.z-index]="spinner.zIndex">
-    <ng-content></ng-content>
-  </div>
-</div>
-`,
-      styles: [".ngx-spinner-overlay{position:fixed;top:0;left:0;width:100%;height:100%}.ngx-spinner-overlay>div:not(.loading-text){top:50%;left:50%;margin:0;position:absolute;transform:translate(-50%,-50%)}.loading-text{position:absolute;top:60%;left:50%;transform:translate(-50%,-60%)}\n"]
-    }]
-  }], () => [{
-    type: NgxSpinnerService
-  }, {
-    type: ChangeDetectorRef
-  }, {
-    type: ElementRef
-  }, {
-    type: void 0,
-    decorators: [{
-      type: Optional
-    }, {
-      type: Inject,
-      args: [NGX_SPINNER_CONFIG]
-    }]
-  }], {
-    bdColor: [{
-      type: Input
-    }],
-    size: [{
-      type: Input
-    }],
-    color: [{
-      type: Input
-    }],
-    type: [{
-      type: Input
-    }],
-    fullScreen: [{
-      type: Input
-    }],
-    name: [{
-      type: Input
-    }],
-    zIndex: [{
-      type: Input
-    }],
-    template: [{
-      type: Input
-    }],
-    showSpinner: [{
-      type: Input
-    }],
-    disableAnimation: [{
-      type: Input
-    }],
-    spinnerDOM: [{
-      type: ViewChild,
-      args: ["overlay"]
-    }]
-  });
-})();
-var _NgxSpinnerModule = class _NgxSpinnerModule {
-  static forRoot(config2) {
-    return {
-      ngModule: _NgxSpinnerModule,
-      providers: [{
-        provide: NGX_SPINNER_CONFIG,
-        useValue: config2
-      }]
-    };
-  }
-};
-_NgxSpinnerModule.\u0275fac = function NgxSpinnerModule_Factory(t) {
-  return new (t || _NgxSpinnerModule)();
-};
-_NgxSpinnerModule.\u0275mod = /* @__PURE__ */ \u0275\u0275defineNgModule({
-  type: _NgxSpinnerModule
-});
-_NgxSpinnerModule.\u0275inj = /* @__PURE__ */ \u0275\u0275defineInjector({
-  imports: [CommonModule]
-});
-var NgxSpinnerModule = _NgxSpinnerModule;
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(NgxSpinnerModule, [{
-    type: NgModule,
-    args: [{
-      imports: [CommonModule, NgxSpinnerComponent, SafeHtmlPipe],
-      exports: [NgxSpinnerComponent]
-    }]
-  }], null, null);
 })();
 
 // src/app/home/home.component.ts
@@ -38468,13 +39629,14 @@ function HomeComponent_For_89_Template(rf, ctx) {
   }
 }
 var _HomeComponent = class _HomeComponent {
-  constructor(productServices, cartservice, spinner) {
+  constructor(productServices, cartservice, http) {
     this.productServices = productServices;
     this.cartservice = cartservice;
-    this.spinner = spinner;
+    this.http = http;
     this.pruductArr = [];
-    this.productServices.getAllProducts().then((productList) => {
-      this.pruductArr = productList;
+    this.productServices.getAllProducts().subscribe((response) => {
+      this.pruductArr = response;
+      console.log("productis" + this.pruductArr);
     });
   }
   addCartItem(Product) {
@@ -38484,9 +39646,9 @@ var _HomeComponent = class _HomeComponent {
   }
 };
 _HomeComponent.\u0275fac = function HomeComponent_Factory(t) {
-  return new (t || _HomeComponent)(\u0275\u0275directiveInject(ProductServices), \u0275\u0275directiveInject(CartService), \u0275\u0275directiveInject(NgxSpinnerService));
+  return new (t || _HomeComponent)(\u0275\u0275directiveInject(ProductServices), \u0275\u0275directiveInject(CartService), \u0275\u0275directiveInject(HttpClient));
 };
-_HomeComponent.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _HomeComponent, selectors: [["app-home"]], standalone: true, features: [\u0275\u0275StandaloneFeature], decls: 155, vars: 0, consts: [[1, "container-fluid", "py-5", "mb-5", "hero-header"], [1, "container", "py-5"], [1, "row", "g-5", "align-items-center"], [1, "col-md-12", "col-lg-7"], [1, "mb-3", "text-secondary"], [1, "mb-5", "display-3", "text-primary"], [1, "position-relative", "mx-auto"], ["type", "number", "placeholder", "Search", 1, "form-control", "border-2", "border-secondary", "w-75", "py-3", "px-4", "rounded-pill"], ["type", "submit", 1, "btn", "btn-primary", "border-2", "border-secondary", "py-3", "px-4", "position-absolute", "rounded-pill", "text-white", "h-100", 2, "top", "0", "right", "25%"], [1, "col-md-12", "col-lg-5"], ["id", "carouselId", "data-bs-ride", "carousel", 1, "carousel", "slide", "position-relative"], ["role", "listbox", 1, "carousel-inner"], [1, "carousel-item", "active", "rounded"], ["src", "./assets/img/hero-img-1.png", "alt", "First slide", 1, "img-fluid", "w-100", "h-100", "bg-secondary", "rounded"], ["href", "#", 1, "btn", "px-4", "py-2", "text-white", "rounded"], [1, "carousel-item", "rounded"], ["src", "./assets/img/hero-img-2.jpg", "alt", "Second slide", 1, "img-fluid", "w-100", "h-100", "rounded"], ["type", "button", "data-bs-target", "#carouselId", "data-bs-slide", "prev", 1, "carousel-control-prev"], ["aria-hidden", "true", 1, "carousel-control-prev-icon"], [1, "visually-hidden"], ["type", "button", "data-bs-target", "#carouselId", "data-bs-slide", "next", 1, "carousel-control-next"], ["aria-hidden", "true", 1, "carousel-control-next-icon"], [1, "container-fluid", "featurs", "py-5"], [1, "row", "g-4"], [1, "col-md-6", "col-lg-3"], [1, "featurs-item", "text-center", "rounded", "bg-light", "p-4"], [1, "featurs-icon", "btn-square", "rounded-circle", "bg-secondary", "mb-5", "mx-auto"], [1, "fas", "fa-car-side", "fa-3x", "text-white"], [1, "featurs-content", "text-center"], [1, "mb-0"], [1, "fas", "fa-user-shield", "fa-3x", "text-white"], [1, "fas", "fa-exchange-alt", "fa-3x", "text-white"], [1, "fa", "fa-phone-alt", "fa-3x", "text-white"], [1, "container-fluid", "fruite", "py-5"], [1, "tab-class", "text-center"], [1, "col-lg-4", "text-start"], [1, "col-lg-8", "text-end"], [1, "nav", "nav-pills", "d-inline-flex", "text-center", "mb-5"], [1, "nav-item"], ["data-bs-toggle", "pill", "href", "#tab-1", 1, "d-flex", "m-2", "py-2", "bg-light", "rounded-pill", "active"], [1, "text-dark", 2, "width", "130px"], [1, "tab-content"], ["id", "tab-1", 1, "tab-pane", "fade", "show", "p-0", "active"], [1, "col-lg-12"], [1, "container-fluid", "service", "py-5"], [1, "row", "g-4", "justify-content-center"], [1, "col-md-6", "col-lg-4"], ["href", "#"], [1, "service-item", "bg-secondary", "rounded", "border", "border-secondary"], ["src", "../../assets/img/featur-1.jpg", "alt", "", 1, "img-fluid", "rounded-top", "w-100"], [1, "px-4", "rounded-bottom"], [1, "service-content", "bg-primary", "text-center", "p-4", "rounded"], [1, "text-white"], [1, "service-item", "bg-dark", "rounded", "border", "border-dark"], ["src", "../../assets/img/featur-2.jpg", "alt", "", 1, "img-fluid", "rounded-top", "w-100"], [1, "service-content", "bg-light", "text-center", "p-4", "rounded"], [1, "text-primary"], [1, "service-item", "bg-primary", "rounded", "border", "border-primary"], ["src", "../../assets/img/featur-3.jpg", "alt", "", 1, "img-fluid", "rounded-top", "w-100"], [1, "service-content", "bg-secondary", "text-center", "p-4", "rounded"], [1, "container-fluid", "py-5"], [1, "container"], [1, "bg-light", "p-5", "rounded"], [1, "col-md-6", "col-lg-6", "col-xl-3"], [1, "counter", "bg-white", "rounded", "p-5"], [1, "fa", "fa-users", "text-secondary"], [1, "col-md-6", "col-lg-4", "col-xl-3"], [1, "rounded", "position-relative", "fruite-item"], [1, "fruite-img"], ["alt", "", 1, "img-fluid", "w-100", "rounded-top", 3, "src"], [1, "text-white", "bg-secondary", "px-3", "py-1", "rounded", "position-absolute", 2, "top", "10px", "left", "10px"], [1, "p-4", "border", "border-secondary", "border-top-0", "rounded-bottom"], [3, "routerLink"], [1, "d-flex", "justify-content-between", "flex-lg-wrap"], [1, "text-dark", "fs-5", "fw-bold", "mb-0"], ["href", "#", 1, "btn", "border", "border-secondary", "rounded-pill", "px-3", "text-primary", 3, "click"], [1, "fa", "fa-shopping-bag", "me-2", "text-primary"], ["class", "col-md-6 col-lg-4 col-xl-3"]], template: function HomeComponent_Template(rf, ctx) {
+_HomeComponent.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _HomeComponent, selectors: [["app-home"]], standalone: true, features: [\u0275\u0275StandaloneFeature], decls: 155, vars: 0, consts: [[1, "container-fluid", "py-5", "mb-5", "hero-header"], [1, "container", "py-5"], [1, "row", "g-5", "align-items-center"], [1, "col-md-12", "col-lg-7"], [1, "mb-3", "text-secondary"], [1, "mb-5", "display-3", "text-primary"], [1, "position-relative", "mx-auto"], ["type", "number", "placeholder", "Search", 1, "form-control", "border-2", "border-secondary", "w-75", "py-3", "px-4", "rounded-pill"], ["type", "submit", 1, "btn", "btn-primary", "border-2", "border-secondary", "py-3", "px-4", "position-absolute", "rounded-pill", "text-white", "h-100", 2, "top", "0", "right", "25%"], [1, "col-md-12", "col-lg-5"], ["id", "carouselId", "data-bs-ride", "carousel", 1, "carousel", "slide", "position-relative"], ["role", "listbox", 1, "carousel-inner"], [1, "carousel-item", "active", "rounded"], ["src", "./assets/img/hero-img-1.png", "alt", "First slide", 1, "img-fluid", "w-100", "h-100", "bg-secondary", "rounded"], ["href", "#", 1, "btn", "px-4", "py-2", "text-white", "rounded"], [1, "carousel-item", "rounded"], ["src", "./assets/img/hero-img-2.jpg", "alt", "Second slide", 1, "img-fluid", "w-100", "h-100", "rounded"], ["type", "button", "data-bs-target", "#carouselId", "data-bs-slide", "prev", 1, "carousel-control-prev"], ["aria-hidden", "true", 1, "carousel-control-prev-icon"], [1, "visually-hidden"], ["type", "button", "data-bs-target", "#carouselId", "data-bs-slide", "next", 1, "carousel-control-next"], ["aria-hidden", "true", 1, "carousel-control-next-icon"], [1, "container-fluid", "featurs", "py-5"], [1, "row", "g-4"], [1, "col-md-6", "col-lg-3"], [1, "featurs-item", "text-center", "rounded", "bg-light", "p-4"], [1, "featurs-icon", "btn-square", "rounded-circle", "bg-secondary", "mb-5", "mx-auto"], [1, "fas", "fa-car-side", "fa-3x", "text-white"], [1, "featurs-content", "text-center"], [1, "mb-0"], [1, "fas", "fa-user-shield", "fa-3x", "text-white"], [1, "fas", "fa-exchange-alt", "fa-3x", "text-white"], [1, "fa", "fa-phone-alt", "fa-3x", "text-white"], [1, "container-fluid", "fruite", "py-5"], [1, "tab-class", "text-center"], [1, "col-lg-4", "text-start"], [1, "col-lg-8", "text-end"], [1, "nav", "nav-pills", "d-inline-flex", "text-center", "mb-5"], [1, "nav-item"], ["data-bs-toggle", "pill", "href", "#tab-1", 1, "d-flex", "m-2", "py-2", "bg-light", "rounded-pill", "active"], [1, "text-dark", 2, "width", "130px"], [1, "tab-content"], ["id", "tab-1", 1, "tab-pane", "fade", "show", "p-0", "active"], [1, "col-lg-12"], [1, "container-fluid", "service", "py-5"], [1, "row", "g-4", "justify-content-center"], [1, "col-md-6", "col-lg-4"], ["href", "#"], [1, "service-item", "bg-secondary", "rounded", "border", "border-secondary"], ["src", "./assets/img/featur-1.jpg", "alt", "", 1, "img-fluid", "rounded-top", "w-100"], [1, "px-4", "rounded-bottom"], [1, "service-content", "bg-primary", "text-center", "p-4", "rounded"], [1, "text-white"], [1, "service-item", "bg-dark", "rounded", "border", "border-dark"], ["src", "./assets/img/featur-2.jpg", "alt", "", 1, "img-fluid", "rounded-top", "w-100"], [1, "service-content", "bg-light", "text-center", "p-4", "rounded"], [1, "text-primary"], [1, "service-item", "bg-primary", "rounded", "border", "border-primary"], ["src", "./assets/img/featur-3.jpg", "alt", "", 1, "img-fluid", "rounded-top", "w-100"], [1, "service-content", "bg-secondary", "text-center", "p-4", "rounded"], [1, "container-fluid", "py-5"], [1, "container"], [1, "bg-light", "p-5", "rounded"], [1, "col-md-6", "col-lg-6", "col-xl-3"], [1, "counter", "bg-white", "rounded", "p-5"], [1, "fa", "fa-users", "text-secondary"], [1, "col-md-6", "col-lg-4", "col-xl-3"], [1, "rounded", "position-relative", "fruite-item"], [1, "fruite-img"], ["alt", "", 1, "img-fluid", "w-100", "rounded-top", 3, "src"], [1, "text-white", "bg-secondary", "px-3", "py-1", "rounded", "position-absolute", 2, "top", "10px", "left", "10px"], [1, "p-4", "border", "border-secondary", "border-top-0", "rounded-bottom"], [3, "routerLink"], [1, "d-flex", "justify-content-between", "flex-lg-wrap"], [1, "text-dark", "fs-5", "fw-bold", "mb-0"], ["href", "#", 1, "btn", "border", "border-secondary", "rounded-pill", "px-3", "text-primary", 3, "click"], [1, "fa", "fa-shopping-bag", "me-2", "text-primary"], ["class", "col-md-6 col-lg-4 col-xl-3"]], template: function HomeComponent_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 0)(1, "div", 1)(2, "div", 2)(3, "div", 3)(4, "h4", 4);
     \u0275\u0275text(5, "100% Organic Foods");
@@ -38631,7 +39793,7 @@ _HomeComponent.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _
 ], styles: ["\n\n.title[_ngcontent-%COMP%] {\n  margin: 0;\n}\n.subtitle[_ngcontent-%COMP%] {\n  margin: 0;\n  margin-top: 5px;\n  font-size: 14px;\n}\n.button-radius[_ngcontent-%COMP%] {\n  margin-top: 27px;\n}\n.primary[_ngcontent-%COMP%] {\n  color: #1bd172;\n}\n.block-slider[_ngcontent-%COMP%] {\n  border: none;\n  width: 100%;\n}\n.block-slider[_ngcontent-%COMP%]   img[_ngcontent-%COMP%] {\n  width: 100%;\n  height: auto;\n}\n.caption-group1[_ngcontent-%COMP%] {\n  text-align: left;\n  opacity: 0;\n  transition-delay: 0s;\n  transition-duration: 0.2s;\n  transition-property: opacity;\n  transition-timing-function: ease-out;\n}\n.slick-slide.slick-active[_ngcontent-%COMP%]   .caption-group1[_ngcontent-%COMP%] {\n  opacity: 1;\n  z-index: 1;\n  transition-delay: 0.3s;\n  transition-duration: 0.2s;\n  transition-property: opacity;\n  transition-timing-function: ease-in;\n}\n.block-slider[_ngcontent-%COMP%]   .caption-group[_ngcontent-%COMP%] {\n  position: absolute;\n  top: 26%;\n  right: 16%;\n}\n/*# sourceMappingURL=data:application/json;base64,ewogICJ2ZXJzaW9uIjogMywKICAic291cmNlcyI6IFsic3JjL2FwcC9ob21lL2hvbWUuY29tcG9uZW50LmNzcyJdLAogICJzb3VyY2VzQ29udGVudCI6IFsiLyogTWFpbiBjb3VyYXNvbCAqL1xuXG4udGl0bGUge1xuICBtYXJnaW46IDA7XG59IFxuLnN1YnRpdGxlIHtcbiAgbWFyZ2luOiAwO1xuICBtYXJnaW4tdG9wOiA1cHg7XG4gIGZvbnQtc2l6ZTogMTRweDtcbn1cbi5idXR0b24tcmFkaXVzIHtcbiAgbWFyZ2luLXRvcDogMjdweDtcbn1cbiAucHJpbWFyeSB7XG4gIGNvbG9yOiAjMWJkMTcyO1xufVxuXG5cblxuXG4vKi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS1cbls5LiBCbG9jayBzbGlkZXJdXG4tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0qL1xuLmJsb2NrLXNsaWRlciB7XG4gIGJvcmRlcjogbm9uZTtcbiAgd2lkdGg6IDEwMCU7XG59XG5cbi5ibG9jay1zbGlkZXIgaW1nIHtcbiAgd2lkdGg6IDEwMCU7XG4gIGhlaWdodDogYXV0bztcbn1cblxuXG5cbi5jYXB0aW9uLWdyb3VwMSB7XG4gIHRleHQtYWxpZ246IGxlZnQ7XG4gIG9wYWNpdHk6IDA7XG4gIHRyYW5zaXRpb24tZGVsYXk6IDBzO1xuICB0cmFuc2l0aW9uLWR1cmF0aW9uOiAwLjJzO1xuICB0cmFuc2l0aW9uLXByb3BlcnR5OiBvcGFjaXR5O1xuICB0cmFuc2l0aW9uLXRpbWluZy1mdW5jdGlvbjogZWFzZS1vdXQ7XG59XG5cbi5zbGljay1zbGlkZS5zbGljay1hY3RpdmUgLmNhcHRpb24tZ3JvdXAxIHtcbiAgb3BhY2l0eTogMTtcbiAgei1pbmRleDogMTtcbiAgdHJhbnNpdGlvbi1kZWxheTogMC4zcztcbiAgdHJhbnNpdGlvbi1kdXJhdGlvbjogMC4ycztcbiAgdHJhbnNpdGlvbi1wcm9wZXJ0eTogb3BhY2l0eTtcbiAgdHJhbnNpdGlvbi10aW1pbmctZnVuY3Rpb246IGVhc2UtaW47XG59XG5cbi8qICYgLnNsaWNrLWxpc3QgeyBtYXJnaW46IDAgLTdweDsgJiAuc2xpY2stc2xpZGUgPiBkaXYgeyBwYWRkaW5nOiAwIDEwcHg7IH0gfSAqL1xuLyotLS0tLS0tLS0tLS0tLS0tLS1cbls0LiBTbGlkZXJzaG93XVxuLS0tLS0tLS0tLS0tLS0tLS0tKi9cblxuXG4gLmJsb2NrLXNsaWRlciBcbi5jYXB0aW9uLWdyb3VwIHtcbiAgcG9zaXRpb246IGFic29sdXRlO1xuICB0b3A6IDI2JTtcbiAgcmlnaHQ6IDE2JTtcbn1cblxuXG4vKiBzbGljayBjb3Jhc29sIHNsaWRlIHNob3cgY3NzIGluIGhvbWUgY29tcG9uZW50ICAqL1xuXG5cbiJdLAogICJtYXBwaW5ncyI6ICI7QUFFQSxDQUFDO0FBQ0MsVUFBUTtBQUNWO0FBQ0EsQ0FBQztBQUNDLFVBQVE7QUFDUixjQUFZO0FBQ1osYUFBVztBQUNiO0FBQ0EsQ0FBQztBQUNDLGNBQVk7QUFDZDtBQUNDLENBQUM7QUFDQSxTQUFPO0FBQ1Q7QUFRQSxDQUFDO0FBQ0MsVUFBUTtBQUNSLFNBQU87QUFDVDtBQUVBLENBTEMsYUFLYTtBQUNaLFNBQU87QUFDUCxVQUFRO0FBQ1Y7QUFJQSxDQUFDO0FBQ0MsY0FBWTtBQUNaLFdBQVM7QUFDVCxvQkFBa0I7QUFDbEIsdUJBQXFCO0FBQ3JCLHVCQUFxQjtBQUNyQiw4QkFBNEI7QUFDOUI7QUFFQSxDQUFDLFdBQVcsQ0FBQyxhQUFhLENBVHpCO0FBVUMsV0FBUztBQUNULFdBQVM7QUFDVCxvQkFBa0I7QUFDbEIsdUJBQXFCO0FBQ3JCLHVCQUFxQjtBQUNyQiw4QkFBNEI7QUFDOUI7QUFRQyxDQXBDQSxhQXFDRCxDQUFDO0FBQ0MsWUFBVTtBQUNWLE9BQUs7QUFDTCxTQUFPO0FBQ1Q7IiwKICAibmFtZXMiOiBbXQp9Cg== */"] });
 var HomeComponent = _HomeComponent;
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(HomeComponent, { className: "HomeComponent", filePath: "src\\app\\home\\home.component.ts", lineNumber: 33 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(HomeComponent, { className: "HomeComponent", filePath: "src\\app\\home\\home.component.ts", lineNumber: 26 });
 })();
 
 // src/app/products/products.component.ts
@@ -38684,8 +39846,9 @@ var _ProductsComponent = class _ProductsComponent {
     this.productServices = productServices;
     this.cartservice = cartservice;
     this.pruductArr = [];
-    this.productServices.getAllProducts().then((productList) => {
-      this.pruductArr = productList;
+    this.productServices.getAllProducts().subscribe((response) => {
+      this.pruductArr = response.products;
+      console.log("productis" + this.pruductArr);
     });
   }
   addCartItem(product) {
@@ -39018,40 +40181,6 @@ var _ProductdetailsComponent = class _ProductdetailsComponent {
     this.cartservice = cartservice;
     this.productId = 1;
     this.quantity = 1;
-    this.slideConfigRelatedProducts = {
-      accessibility: true,
-      dots: false,
-      slidesToShow: 3,
-      autoplay: false,
-      autoplaySpeed: 1500,
-      isFinite: true,
-      arrows: true,
-      responsive: [
-        {
-          breakpoint: 1200,
-          settings: {
-            slidesToShow: 4,
-            slidesToScroll: 1
-          }
-        },
-        {
-          breakpoint: 1008,
-          settings: {
-            slidesToShow: 2,
-            slidesToScroll: 1
-          }
-        },
-        {
-          breakpoint: 800,
-          settings: {
-            slidesToShow: 1,
-            slidesToScroll: 1
-          }
-        }
-      ],
-      nextArrow: '<button type="button" class=" logoslick-next ">next</button>',
-      prevArrow: '<button type="button" class="  logoslick-prev  ">prev</button>'
-    };
     this.activatedRout.params.subscribe((params) => {
       this.productId = Number(params["id"]);
     });
@@ -39059,8 +40188,8 @@ var _ProductdetailsComponent = class _ProductdetailsComponent {
   }
   //calling service to display product
   getProduct(productselected) {
-    this.productService.getProductById(productselected).then((returnedproduct) => {
-      this.product = returnedproduct;
+    this.productService.getProductById(productselected).subscribe((response) => {
+      this.product = response;
     });
     window.scrollTo(0, 0);
   }
@@ -39498,7 +40627,8 @@ var routes = [
 // src/app/app.config.ts
 var appConfig = {
   providers: [
-    provideRouter(routes)
+    provideRouter(routes),
+    provideHttpClient()
   ]
 };
 
@@ -39734,12 +40864,14 @@ _AppComponent.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _A
 }, dependencies: [
   CommonModule,
   RouterOutlet,
+  // LatestProductsComponent,
   HeaderComponent,
-  FooterComponent
+  FooterComponent,
+  HttpClientModule
 ], styles: ["\n\na[_ngcontent-%COMP%] {\n  text-decoration: none;\n}\n/*# sourceMappingURL=data:application/json;base64,ewogICJ2ZXJzaW9uIjogMywKICAic291cmNlcyI6IFsic3JjL2FwcC9hcHAuY29tcG9uZW50LmNzcyJdLAogICJzb3VyY2VzQ29udGVudCI6IFsiYXsgdGV4dC1kZWNvcmF0aW9uOiBub25lfSJdLAogICJtYXBwaW5ncyI6ICI7QUFBQTtBQUFHLG1CQUFpQjtBQUFJOyIsCiAgIm5hbWVzIjogW10KfQo= */"] });
 var AppComponent = _AppComponent;
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AppComponent, { className: "AppComponent", filePath: "src\\app\\app.component.ts", lineNumber: 42 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AppComponent, { className: "AppComponent", filePath: "src\\app\\app.component.ts", lineNumber: 45 });
 })();
 
 // src/main.ts
@@ -39794,6 +40926,13 @@ bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err))
    * License: MIT
    *)
 
+@angular/common/fesm2022/http.mjs:
+  (**
+   * @license Angular v17.0.8
+   * (c) 2010-2022 Google LLC. https://angular.io/
+   * License: MIT
+   *)
+
 @angular/platform-browser/fesm2022/platform-browser.mjs:
   (**
    * @license Angular v17.0.8
@@ -39809,13 +40948,6 @@ bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err))
    *)
 
 @angular/forms/fesm2022/forms.mjs:
-  (**
-   * @license Angular v17.0.8
-   * (c) 2010-2022 Google LLC. https://angular.io/
-   * License: MIT
-   *)
-
-@angular/animations/fesm2022/animations.mjs:
   (**
    * @license Angular v17.0.8
    * (c) 2010-2022 Google LLC. https://angular.io/
