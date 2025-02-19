@@ -39847,7 +39847,7 @@ var _ProductsComponent = class _ProductsComponent {
     this.cartservice = cartservice;
     this.pruductArr = [];
     this.productServices.getAllProducts().subscribe((response) => {
-      this.pruductArr = response.products;
+      this.pruductArr = response;
       console.log("productis" + this.pruductArr);
     });
   }
